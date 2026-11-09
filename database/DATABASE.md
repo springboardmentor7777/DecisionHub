@@ -91,7 +91,9 @@ The following indexes are created for frequently accessed columns:
   to the corresponding decision.
 - The reports table uses target_type and target_id to identify
   reported content.
-
+- Sample password_hash values are placeholders for testing only
+  and must not be used for authentication.
+  
 ## 10. Status
 
 Database schema creation, sample data insertion, constraint verification, and JOIN testing have been completed.
