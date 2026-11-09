@@ -181,7 +181,15 @@ JOIN users u
     ON r.reported_by = u.user_id
 ORDER BY r.report_id;
 
+-- 13. VERIFY SINGLE-CHOICE VOTING
 
+SELECT
+    decision_id,
+    user_id,
+    COUNT(*) AS vote_count
+FROM votes
+GROUP BY decision_id, user_id
+HAVING COUNT(*) > 1;
 -- ==========================================
 -- END OF VERIFICATION
 -- ==========================================
