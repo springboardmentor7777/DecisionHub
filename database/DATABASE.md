@@ -45,7 +45,8 @@ The database uses:
 
 - Primary Keys for unique record identification.
 - Foreign Keys to maintain relationships between tables.
-- UNIQUE constraints to prevent duplicate email addresses and duplicate votes for the same option.
+- UNIQUE constraints to prevent duplicate email addresses and ensure
+  each user can vote only once per decision.
 - CHECK constraints to validate roles, decision status, visibility, and report status.
 - ON DELETE CASCADE and ON DELETE SET NULL to manage related records.
 
@@ -83,11 +84,13 @@ The following indexes are created for frequently accessed columns:
 | **Total** | **42** |
 
 ## 9. Notes
-
-- The current voting constraint prevents a user from voting more than once for the same option in a decision.
-- The database does not yet enforce single-choice voting.
-- The voting rule will be finalized based on the project requirements and backend integration.
-- The reports table uses target_type and target_id to identify reported content.
+- The voting system follows a single-choice voting rule.
+- Each user can submit only one vote per decision.
+- The UNIQUE constraint (decision_id, user_id) enforces this rule.
+- The composite foreign key ensures that the selected option belongs
+  to the corresponding decision.
+- The reports table uses target_type and target_id to identify
+  reported content.
 
 ## 10. Status
 
