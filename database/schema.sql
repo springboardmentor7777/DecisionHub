@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS options (
     UNIQUE (decision_id, option_id)
 );
 
--- 5. VOTES
+-- 5. VOTES (SINGLE-CHOICE)
 CREATE TABLE IF NOT EXISTS votes (
     vote_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     decision_id BIGINT NOT NULL,
@@ -64,9 +64,9 @@ CREATE TABLE IF NOT EXISTS votes (
         REFERENCES options(decision_id, option_id)
         ON DELETE CASCADE,
 
-    UNIQUE (decision_id, option_id, user_id)
+    CONSTRAINT votes_one_vote_per_decision
+        UNIQUE (decision_id, user_id)
 );
-
 -- 6. COMMENTS
 CREATE TABLE IF NOT EXISTS comments (
     comment_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
