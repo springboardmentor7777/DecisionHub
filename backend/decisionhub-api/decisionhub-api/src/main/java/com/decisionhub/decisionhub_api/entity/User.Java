@@ -15,7 +15,7 @@ public class User {
     private String name;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private String Email;
 
     private String password;          // null for Google OAuth users later
 
