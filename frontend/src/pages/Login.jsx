@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import AuthLayout from "../components/AuthLayout";
 import { JourneyIllustration } from "../components/AuthIllustrations";
@@ -7,6 +8,7 @@ import { GoogleIcon, GithubIcon } from "../components/SocialIcons";
 
 export default function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [form, setForm] = useState({ email: "", password: "", remember: false });
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState({});
@@ -33,7 +35,7 @@ export default function Login() {
         try {
             // TODO: wire to backend once auth API is live
             // const { data } = await api.post("/api/auth/login", form);
-            console.log("login submit", form);
+            login("user"); // pass "admin" or "moderator" to test other roles
             navigate("/dashboard");
         } finally {
             setSubmitting(false);
