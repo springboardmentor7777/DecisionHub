@@ -1,0 +1,4 @@
+com\decisionhub\DecisionhubApplication$SecurityConfig.class
+com\decisionhub\DecisionhubApplication.class
+com\decisionhub\AuthTestController.class
+com\decisionhub\controller\TestController.class
