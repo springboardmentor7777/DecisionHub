@@ -9,15 +9,7 @@ import java.time.LocalDateTime;
 public class User {
 
     @Id
-    @SequenceGenerator(
-        name = "user_seq",
-        sequenceName = "users_user_id_seq",
-        allocationSize = 1
-    )
-    @GeneratedValue(
-        strategy = GenerationType.SEQUENCE,
-        generator = "user_seq"
-    )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
 
