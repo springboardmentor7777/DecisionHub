@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LayoutDashboard, Vote, Scale, MessageSquare } from "lucide-react";
+import api from "../api/axios";
 import AuthLayout from "../components/AuthLayout";
 import { JourneyIllustration } from "../components/AuthIllustrations";
 import { GoogleIcon, GithubIcon } from "../components/SocialIcons";
@@ -32,11 +33,33 @@ export default function Login() {
         e.preventDefault();
         if (!validate()) return;
         setSubmitting(true);
+        setErrors({});
         try {
-            // TODO: wire to backend once auth API is live
-            // const { data } = await api.post("/api/auth/login", form);
-            login("user"); // pass "admin" or "moderator" to test other roles
+            const { data } = await api.post("/api/auth/login", {
+                email: form.email.trim(),
+                password: form.password,
+            });
+            localStorage.setItem("token", data.accessToken);
+            login(
+                {
+                    id: data.userId,
+                    name: data.fullName,
+                    email: data.email,
+                    role: String(data.role).toLowerCase(), // USER -> user
+                },
+                data.accessToken
+            );
             navigate("/dashboard");
+        } catch (err) {
+            const status = err.response?.status;
+            setErrors({
+                form:
+                    !err.response
+                        ? "Cannot reach the server. Please try again."
+                        : status === 400 || status === 401 || status === 403
+                            ? "Invalid email or password"
+                            : err.response.data?.message || "Something went wrong. Please try again.",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -49,14 +72,14 @@ export default function Login() {
             highlight="Hub."
             subtext="Create boards, compare options, vote, and make better decisions with the power of community."
             features={[
-                { icon: "📊", label: "Create Decision Boards" },
-                { icon: "✅", label: "Vote & Run Polls" },
-                { icon: "⚖️", label: "Compare Options" },
-                { icon: "💬", label: "Discuss & Get Insights" },
+                { icon: <LayoutDashboard className="h-4 w-4" />, label: "Create Decision Boards" },
+                { icon: <Vote className="h-4 w-4" />, label: "Vote & Run Polls" },
+                { icon: <Scale className="h-4 w-4" />, label: "Compare Options" },
+                { icon: <MessageSquare className="h-4 w-4" />, label: "Discuss & Get Insights" },
             ]}
             illustration={<JourneyIllustration />}
         >
-            <h2 className="text-3xl font-extrabold text-plum">Welcome Back! 👋</h2>
+            <h2 className="text-3xl font-extrabold text-plum">Welcome Back!</h2>
             <p className="mt-1.5 text-sm text-plum/60">Login to your DecisionHub account</p>
 
             <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
@@ -116,12 +139,16 @@ export default function Login() {
                     </Link>
                 </div>
 
+                {errors.form && (
+                    <p className="rounded-lg bg-burgundy/10 px-3 py-2 text-sm text-burgundy">{errors.form}</p>
+                )}
+
                 <button
                     type="submit"
                     disabled={submitting}
                     className="mt-2 w-full rounded-xl bg-gradient-to-r from-sunset to-orange py-3.5 text-sm font-semibold text-white shadow-lg shadow-sunset/25 transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
                 >
-                    {submitting ? "Logging in..." : "Log In →"}
+                    {submitting ? "Logging in..." : "Log In"}
                 </button>
             </form>
 

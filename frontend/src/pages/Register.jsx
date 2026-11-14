@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Vote, Scale, Users } from "lucide-react";
+import api from "../api/axios";
 import AuthLayout from "../components/AuthLayout";
 import { SignpostIllustration } from "../components/AuthIllustrations";
 import { GoogleIcon, GithubIcon } from "../components/SocialIcons";
@@ -37,11 +38,23 @@ export default function Register() {
         e.preventDefault();
         if (!validate()) return;
         setSubmitting(true);
+        setErrors({});
         try {
-            // TODO: wire to backend once auth API is live
-            // const { data } = await api.post("/api/auth/register", form);
-            console.log("register submit", form);
+            await api.post("/api/auth/register", {
+                fullName: form.fullName.trim(),
+                email: form.email.trim(),
+                password: form.password,
+            });
             navigate("/login");
+        } catch (err) {
+            const data = err.response?.data;
+            // backend sends { message } for duplicate email, or a map of field errors
+            const fieldMsg = data && typeof data === "object" ? Object.values(data).find((v) => typeof v === "string") : null;
+            setErrors({
+                form: !err.response
+                    ? "Cannot reach the server. Please try again."
+                    : data?.message || fieldMsg || "Registration failed. Please try again.",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -54,9 +67,9 @@ export default function Register() {
             highlight="Journey."
             subtext="Join a community of thinkers, share opinions, run polls and make smarter choices together."
             features={[
-                { icon: "✅", label: "Vote" },
-                { icon: "⇄", label: "Compare" },
-                { icon: "👥", label: "Collaborate" },
+                { icon: <Vote className="h-4 w-4" />, label: "Vote" },
+                { icon: <Scale className="h-4 w-4" />, label: "Compare" },
+                { icon: <Users className="h-4 w-4" />, label: "Collaborate" },
             ]}
             illustration={<SignpostIllustration />}
         >
@@ -134,12 +147,16 @@ export default function Register() {
                     </div>
                 </div>
 
+                {errors.form && (
+                    <p className="rounded-lg bg-burgundy/10 px-3 py-2 text-sm text-burgundy">{errors.form}</p>
+                )}
+
                 <button
                     type="submit"
                     disabled={submitting}
                     className="mt-2 w-full rounded-xl bg-gradient-to-r from-sunset to-orange py-3.5 text-sm font-semibold text-white shadow-lg shadow-sunset/25 transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
                 >
-                    {submitting ? "Creating account..." : "Create Account →"}
+                    {submitting ? "Creating account..." : "Create Account"}
                 </button>
             </form>
 
