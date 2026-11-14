@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Mail, Lock, Eye, EyeOff, LayoutDashboard, Vote, Scale, MessageSquare } from "lucide-react";
-import api from "../api/axios";
+import api from "../api/axios.js";
 import AuthLayout from "../components/AuthLayout";
 import { JourneyIllustration } from "../components/AuthIllustrations";
 import { GoogleIcon, GithubIcon } from "../components/SocialIcons";
