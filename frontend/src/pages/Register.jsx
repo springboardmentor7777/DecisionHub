@@ -2,9 +2,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerUser } from '../services/authService'
+import Brand from '../components/Brand'
 
 function Register() {
-
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
@@ -37,17 +37,13 @@ function Register() {
       await registerUser(formData)
 
       alert('Registration successful! Please log in.')
-
       navigate('/login')
-
     } catch (err) {
-
       const errorMessage =
         err.response?.data?.message ||
         'Registration failed. Please try again.'
 
       setError(errorMessage)
-
     } finally {
       setLoading(false)
     }
@@ -56,16 +52,20 @@ function Register() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
 
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/60 sm:p-10">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-200/60 sm:p-10">
 
-        {/* Logo */}
+        {/* DecisionHub Brand */}
         <div className="mb-8 flex flex-col items-center">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-2xl font-bold text-white">
-            D
-          </div>
+          <Link
+            to="/"
+            aria-label="DecisionHub home"
+            className="transition hover:opacity-90"
+          >
+            <Brand />
+          </Link>
 
-          <h1 className="mt-4 text-2xl font-bold text-slate-900">
+          <h1 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
             Create your account
           </h1>
 
@@ -79,7 +79,10 @@ function Register() {
         <form onSubmit={handleSubmit} className="space-y-5">
 
           <div>
-            <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="name"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Full name
             </label>
 
@@ -98,7 +101,10 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="email"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Email address
             </label>
 
@@ -116,7 +122,10 @@ function Register() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-sm font-medium text-slate-700"
+            >
               Password
             </label>
 
@@ -152,25 +161,30 @@ function Register() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-indigo-600 py-3 font-semibold text-white shadow-md shadow-indigo-200 transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-indigo-600 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
         </form>
 
+        {/* Login Link */}
         <p className="mt-7 text-center text-sm text-slate-600">
           Already have an account?{' '}
           <Link
             to="/login"
-            className="font-semibold text-indigo-600 hover:text-indigo-700"
+            className="font-semibold text-indigo-600 transition hover:text-indigo-700"
           >
             Sign in
           </Link>
         </p>
 
+        {/* Home Link */}
         <div className="mt-8 border-t border-slate-100 pt-6 text-center">
-          <Link to="/" className="text-sm text-slate-500 hover:text-indigo-600">
+          <Link
+            to="/"
+            className="text-sm text-slate-500 transition hover:text-indigo-600"
+          >
             ← Back to home
           </Link>
         </div>
