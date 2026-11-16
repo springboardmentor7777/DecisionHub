@@ -1,0 +1,37 @@
+-- ==========================================
+-- FLYWAY MIGRATION — V2
+--
+-- Purpose:
+--   Document the existing database-level duplicate-vote protection.
+--   The V1 schema already implements duplicate-vote prevention via:
+--
+--   1. UNIQUE(decision_id, user_id, option_id) constraint on votes
+--      — prevents the same user voting for the same option twice.
+--      — allows MULTIPLE_CHOICE (different options per user+decision).
+--
+--   2. Partial unique index votes_one_rating_per_decision(decision_id, user_id)
+--      WHERE rating IS NOT NULL
+--      — prevents a user casting more than one RATING vote per decision.
+--
+--   3. Trigger trg_validate_vote_poll_type
+--      — enforces one-vote-per-user for SINGLE_CHOICE polls.
+--      — validates vote type matches the decision's poll_type.
+--
+--   The application layer (VoteService.castVote, B6 fix) adds an early
+--   guard using existsByUser_UserIdAndDecision_DecisionId() so that
+--   duplicate votes return a clear HTTP 409 instead of a database error.
+--
+-- This file serves as a documentation migration.
+-- No schema changes are needed; the placeholder statement below is a no-op.
+--
+-- Safety:
+--   Does NOT drop, truncate, alter, or recreate any existing table or index.
+--   Safe to apply on the existing Neon database.
+--
+-- To apply: start the backend with valid DB credentials. Flyway will execute
+--           this migration automatically on startup.
+-- ==========================================
+
+-- No-op: all required constraints already exist in V1.
+-- This comment migration records the B6 investigation outcome.
+SELECT 1;

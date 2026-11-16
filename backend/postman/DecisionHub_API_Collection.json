@@ -1,0 +1,571 @@
+{
+  "info": {
+    "_postman_id": "decisionhub-api-v2",
+    "name": "DecisionHub API",
+    "description": "Complete API collection for DecisionHub — authentication, communities, decisions, options, votes, comments, notifications, and reports.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8081"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response has userId', () => pm.expect(pm.response.json()).to.have.property('userId'));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('user_id', data.userId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Alice Smith\",\n  \"email\": \"alice@example.com\",\n  \"password\": \"securePass1\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"]},
+            "description": "Register a new user. Returns 201 with UserResponse. Returns 409 if email is already registered."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response has accessToken', () => pm.expect(pm.response.json()).to.have.property('accessToken'));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', data.accessToken);",
+                  "pm.collectionVariables.set('user_id', data.userId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice@example.com\",\n  \"password\": \"securePass1\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"]},
+            "description": "Login. Saves the returned JWT to {{access_token}}. Returns 401 for bad credentials."
+          }
+        },
+        {
+          "name": "Get Current User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has email', () => pm.expect(pm.response.json()).to.have.property('email'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api","auth","me"]},
+            "description": "Returns the authenticated user's profile. Requires Bearer token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has userId', () => pm.expect(pm.response.json()).to.have.property('userId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"]},
+            "description": "Get a user by ID. Returns 404 if not found."
+          }
+        },
+        {
+          "name": "Update User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Full name updated', () => pm.expect(pm.response.json().fullName).to.equal('Alice Updated'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Alice Updated\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/users/{{user_id}}", "host": ["{{base_url}}"], "path": ["api","users","{{user_id}}"]},
+            "description": "Update authenticated user's full name. Returns 403 if updating another user's profile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Communities",
+      "item": [
+        {
+          "name": "Create Community",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('community_id', data.communityId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"communityName\": \"Tech Decisions\",\n  \"description\": \"A community for technology decision polls\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/communities", "host": ["{{base_url}}"], "path": ["api","communities"]},
+            "description": "Create a new community. Saves communityId to {{community_id}}."
+          }
+        },
+        {
+          "name": "Get All Communities",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/communities", "host": ["{{base_url}}"], "path": ["api","communities"]},
+            "description": "Returns all communities."
+          }
+        },
+        {
+          "name": "Get Community By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/communities/{{community_id}}", "host": ["{{base_url}}"], "path": ["api","communities","{{community_id}}"]},
+            "description": "Returns a single community. Returns 404 if not found."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Decisions",
+      "item": [
+        {
+          "name": "Create Decision",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('decision_id', data.decisionId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Best Programming Language?\",\n  \"description\": \"Vote on your preferred language\",\n  \"communityId\": {{community_id}},\n  \"pollType\": \"SINGLE_CHOICE\",\n  \"visibility\": \"PUBLIC\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/decisions", "host": ["{{base_url}}"], "path": ["api","decisions"]},
+            "description": "Create a new decision poll. Saves decisionId to {{decision_id}}."
+          }
+        },
+        {
+          "name": "Get All Decisions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/decisions", "host": ["{{base_url}}"], "path": ["api","decisions"]},
+            "description": "Returns all decisions."
+          }
+        },
+        {
+          "name": "Get Decision By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has decisionId', () => pm.expect(pm.response.json()).to.have.property('decisionId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}"]},
+            "description": "Returns a single decision. Returns 404 if not found."
+          }
+        },
+        {
+          "name": "Update Decision",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "PUT",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLOSED\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}"]},
+            "description": "Update a decision (title, description, status, visibility, endsAt)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Options",
+      "item": [
+        {
+          "name": "Add Option",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('option_id', data.optionId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionText\": \"Python\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}/options", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}","options"]},
+            "description": "Add a voting option to a decision. Saves optionId to {{option_id}}."
+          }
+        },
+        {
+          "name": "Get Options",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}/options", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}","options"]},
+            "description": "Returns all options for a decision."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Votes",
+      "item": [
+        {
+          "name": "Cast Vote",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Has voteId', () => pm.expect(pm.response.json()).to.have.property('voteId'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"optionId\": {{option_id}}\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}/votes", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}","votes"]},
+            "description": "Cast a vote on a decision. Returns 409 if already voted. Use optionId for SINGLE_CHOICE/MULTIPLE_CHOICE, or rating (1-5) for RATING polls."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('comment_id', data.commentId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"commentText\": \"This is a great poll!\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}/comments", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}","comments"]},
+            "description": "Add a comment to a decision. Include parentId for threaded replies."
+          }
+        },
+        {
+          "name": "Get Comments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/decisions/{{decision_id}}/comments", "host": ["{{base_url}}"], "path": ["api","decisions","{{decision_id}}","comments"]},
+            "description": "Returns all comments for a decision ordered by createdAt ASC."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/notifications", "host": ["{{base_url}}"], "path": ["api","notifications"]},
+            "description": "Returns all notifications for the authenticated user, newest first."
+          }
+        },
+        {
+          "name": "Mark Notification As Read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('isRead is true', () => pm.expect(pm.response.json().isRead).to.be.true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "PATCH",
+            "url": {"raw": "{{base_url}}/api/notifications/{{notification_id}}/read", "host": ["{{base_url}}"], "path": ["api","notifications","{{notification_id}}","read"]},
+            "description": "Marks a notification as read. Returns 404 if not found."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Report",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('report_id', data.reportId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetType\": \"DECISION\",\n  \"targetId\": {{decision_id}},\n  \"reason\": \"This content is inappropriate\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/reports", "host": ["{{base_url}}"], "path": ["api","reports"]},
+            "description": "Submit a report on a decision, comment, or user. Any authenticated user may report."
+          }
+        },
+        {
+          "name": "Get All Reports (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/admin/reports", "host": ["{{base_url}}"], "path": ["api","admin","reports"]},
+            "description": "ADMIN ONLY — Returns all reports ordered by createdAt DESC. Returns 403 for USER role."
+          }
+        },
+        {
+          "name": "Update Report Status (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{access_token}}"}]},
+            "method": "PATCH",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/api/admin/reports/{{report_id}}", "host": ["{{base_url}}"], "path": ["api","admin","reports","{{report_id}}"]},
+            "description": "ADMIN ONLY — Update a report status. Valid values: PENDING, REVIEWED, RESOLVED, REJECTED."
+          }
+        }
+      ]
+    }
+  ]
+}
