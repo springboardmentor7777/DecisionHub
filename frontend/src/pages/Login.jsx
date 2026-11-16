@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LayoutDashboard, Vote, Scale, MessageSquare } from "lucide-react";
 import AuthLayout from "../components/AuthLayout";
 import { JourneyIllustration } from "../components/AuthIllustrations";
 import { GoogleIcon, GithubIcon } from "../components/SocialIcons";
@@ -28,18 +28,23 @@ export default function Login() {
         return Object.keys(next).length === 0;
     };
 
-    const [apiError, setApiError] = useState("");
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
         setSubmitting(true);
-        setApiError("");
+        setErrors({});
         try {
-            await login(form.email, form.password);
+            await login(form.email.trim(), form.password);
             navigate("/dashboard");
         } catch (err) {
-            setApiError(err?.response?.data?.message ?? "Invalid email or password.");
+            const status = err.response?.status;
+            setErrors({
+                form: !err.response
+                    ? "Cannot reach the server. Please try again."
+                    : status === 400 || status === 401 || status === 403
+                        ? "Invalid email or password."
+                        : err.response.data?.message || "Something went wrong. Please try again.",
+            });
         } finally {
             setSubmitting(false);
         }
@@ -52,23 +57,17 @@ export default function Login() {
             highlight="Hub."
             subtext="Create boards, compare options, vote, and make better decisions with the power of community."
             features={[
-                { icon: "📊", label: "Create Decision Boards" },
-                { icon: "✅", label: "Vote & Run Polls" },
-                { icon: "⚖️", label: "Compare Options" },
-                { icon: "💬", label: "Discuss & Get Insights" },
+                { icon: <LayoutDashboard className="h-4 w-4" />, label: "Create Decision Boards" },
+                { icon: <Vote className="h-4 w-4" />, label: "Vote & Run Polls" },
+                { icon: <Scale className="h-4 w-4" />, label: "Compare Options" },
+                { icon: <MessageSquare className="h-4 w-4" />, label: "Discuss & Get Insights" },
             ]}
             illustration={<JourneyIllustration />}
         >
-            <h2 className="text-3xl font-extrabold text-plum">Welcome Back! 👋</h2>
+            <h2 className="text-3xl font-extrabold text-plum">Welcome Back!</h2>
             <p className="mt-1.5 text-sm text-plum/60">Login to your DecisionHub account</p>
 
-            {apiError && (
-                <div className="mt-4 rounded-xl border border-burgundy/20 bg-burgundy/5 px-4 py-3 text-sm text-burgundy">
-                    {apiError}
-                </div>
-            )}
-
-            <form className="mt-4 space-y-4" onSubmit={handleSubmit} noValidate>
+            <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
                 <div>
                     <label className="mb-1.5 block text-sm font-medium text-plum/80">Email</label>
                     <div className="relative">
@@ -125,12 +124,16 @@ export default function Login() {
                     </Link>
                 </div>
 
+                {errors.form && (
+                    <p className="rounded-lg bg-burgundy/10 px-3 py-2 text-sm text-burgundy">{errors.form}</p>
+                )}
+
                 <button
                     type="submit"
                     disabled={submitting}
                     className="mt-2 w-full rounded-xl bg-gradient-to-r from-sunset to-orange py-3.5 text-sm font-semibold text-white shadow-lg shadow-sunset/25 transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
                 >
-                    {submitting ? "Logging in..." : "Log In →"}
+                    {submitting ? "Logging in..." : "Log In"}
                 </button>
             </form>
 

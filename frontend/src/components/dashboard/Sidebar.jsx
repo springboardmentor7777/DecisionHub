@@ -2,22 +2,36 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard, Vote, GitCompare, MessageSquare,
-    LogOut, X, ChevronRight,
+    LogOut, X, ChevronRight, Users, Flag, ShieldCheck,
+    BarChart3, FileWarning,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-const USER_NAV = [
-    { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
-    { icon: Vote,            label: "My Polls",  to: "/dashboard/votes" },
-    { icon: GitCompare,      label: "Compare",   to: "/dashboard/compare" },
-    { icon: MessageSquare,   label: "Discuss",   to: "/dashboard/discuss" },
-];
+const NAV_BY_ROLE = {
+    user: [
+        { icon: LayoutDashboard, label: "Dashboard",  to: "/dashboard" },
+        { icon: Vote,            label: "My Polls",   to: "/dashboard/votes" },
+        { icon: GitCompare,      label: "Compare",    to: "/dashboard/compare" },
+        { icon: MessageSquare,   label: "Discuss",    to: "/dashboard/discuss" },
+    ],
+    admin: [
+        { icon: LayoutDashboard, label: "Overview",      to: "/dashboard/admin" },
+        { icon: Users,           label: "Users",         to: "/dashboard/admin/users" },
+        { icon: BarChart3,       label: "Analytics",     to: "/dashboard/admin/analytics" },
+        { icon: Flag,            label: "Reports",       to: "/dashboard/admin/reports" },
+    ],
+    moderator: [
+        { icon: LayoutDashboard, label: "Overview",      to: "/dashboard/moderator" },
+        { icon: FileWarning,     label: "Flagged Content", to: "/dashboard/moderator/flagged" },
+        { icon: MessageSquare,   label: "Discussions",   to: "/dashboard/moderator/discussions" },
+        { icon: ShieldCheck,     label: "Decisions",     to: "/dashboard/moderator/decisions" },
+    ],
+};
 
-function Avatar({ user, size = "md" }) {
-    const sz = size === "md" ? "h-10 w-10 text-base" : "h-8 w-8 text-xs";
+function Avatar({ user }) {
     const initials = user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
     return (
-        <span className={`${sz} flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sunset to-orange font-bold text-white shadow`}>
+        <span className="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sunset to-orange font-bold text-white shadow text-base">
             {initials}
         </span>
     );
@@ -27,41 +41,30 @@ export default function Sidebar({ open, onClose }) {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate("/login");
-    };
+    const handleLogout = () => { logout(); navigate("/login"); };
 
-    const roleLabel = {
-        user: "Member",
-        admin: "Administrator",
-        moderator: "Moderator",
-    }[user?.role] ?? "Member";
+    const role = user?.role ?? "user";
+    const navItems = NAV_BY_ROLE[role] ?? NAV_BY_ROLE.user;
 
+    const roleLabel = { user: "Member", admin: "Administrator", moderator: "Moderator" }[role] ?? "Member";
     const roleBadgeColor = {
         user: "bg-sunset/10 text-sunset",
         admin: "bg-burgundy/10 text-burgundy",
         moderator: "bg-orange/10 text-orange",
-    }[user?.role] ?? "bg-sunset/10 text-sunset";
+    }[role] ?? "bg-sunset/10 text-sunset";
 
     return (
         <>
-            {/* Mobile backdrop */}
             {open && (
-                <div
-                    className="fixed inset-0 z-20 bg-plum/40 backdrop-blur-sm lg:hidden"
-                    onClick={onClose}
-                />
+                <div className="fixed inset-0 z-20 bg-plum/40 backdrop-blur-sm lg:hidden" onClick={onClose} />
             )}
 
-            <aside
-                className={`
-                    fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-plum text-ivory shadow-2xl
-                    transition-transform duration-300 ease-in-out
-                    ${open ? "translate-x-0" : "-translate-x-full"}
-                    lg:relative lg:translate-x-0 lg:shadow-none
-                `}
-            >
+            <aside className={`
+                fixed inset-y-0 left-0 z-30 flex w-64 flex-col bg-plum text-ivory shadow-2xl
+                transition-transform duration-300 ease-in-out
+                ${open ? "translate-x-0" : "-translate-x-full"}
+                lg:relative lg:translate-x-0 lg:shadow-none
+            `}>
                 {/* Brand */}
                 <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
                     <div className="flex items-center gap-3">
@@ -81,8 +84,6 @@ export default function Sidebar({ open, onClose }) {
                         <X className="h-5 w-5" />
                     </button>
                 </div>
-
-                {/* User card */}
                 <div className="mx-4 mt-5 rounded-2xl bg-white/8 p-4 border border-white/10">
                     <div className="flex items-center gap-3">
                         <Avatar user={user} />
@@ -95,14 +96,13 @@ export default function Sidebar({ open, onClose }) {
                     </div>
                 </div>
 
-                {/* Nav */}
                 <nav className="mt-5 flex-1 space-y-0.5 px-3 overflow-y-auto">
                     <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-ivory/30">Menu</p>
-                    {USER_NAV.map(({ icon: Icon, label, to }) => (
+                    {navItems.map(({ icon: Icon, label, to }) => (
                         <NavLink
                             key={to}
                             to={to}
-                            end={to === "/dashboard"}
+                            end={to === "/dashboard" || to === "/dashboard/admin" || to === "/dashboard/moderator"}
                             onClick={onClose}
                             className={({ isActive }) =>
                                 `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all
@@ -112,20 +112,19 @@ export default function Sidebar({ open, onClose }) {
                                 }`
                             }
                         >
-                            <Icon className="h-4.5 w-4.5 shrink-0" />
+                            <Icon className="h-4 w-4 shrink-0" />
                             <span className="flex-1">{label}</span>
                             <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-50 transition-opacity" />
                         </NavLink>
                     ))}
                 </nav>
 
-                {/* Logout */}
                 <div className="p-4 border-t border-white/10">
                     <button
                         onClick={handleLogout}
                         className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ivory/60 transition hover:bg-white/8 hover:text-coral"
                     >
-                        <LogOut className="h-4.5 w-4.5" />
+                        <LogOut className="h-4 w-4" />
                         Log Out
                     </button>
                 </div>
