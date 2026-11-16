@@ -1,33 +1,19 @@
-HELP.md
+cd C:\Users\HP\IdeaProjects\decisionhub
+@"
+# Root-level ignores — catch IDE and build artifacts anywhere
+.idea/
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
 *.iml
+*.iws
 *.ipr
+.DS_Store
+Thumbs.db
+*.log
+*.env
+application-local.properties
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
+# Catch build/IDE folders inside any subfolder (e.g. backend/)
+**/target/
+**/.idea/
+**/*.iml
+"@ | Out-File -FilePath ".gitignore" -Encoding utf8
