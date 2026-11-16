@@ -28,15 +28,18 @@ export default function Login() {
         return Object.keys(next).length === 0;
     };
 
+    const [apiError, setApiError] = useState("");
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
         setSubmitting(true);
+        setApiError("");
         try {
-            // TODO: wire to backend once auth API is live
-            // const { data } = await api.post("/api/auth/login", form);
-            login("user"); // pass "admin" or "moderator" to test other roles
+            await login(form.email, form.password);
             navigate("/dashboard");
+        } catch (err) {
+            setApiError(err?.response?.data?.message ?? "Invalid email or password.");
         } finally {
             setSubmitting(false);
         }
@@ -59,7 +62,13 @@ export default function Login() {
             <h2 className="text-3xl font-extrabold text-plum">Welcome Back! 👋</h2>
             <p className="mt-1.5 text-sm text-plum/60">Login to your DecisionHub account</p>
 
-            <form className="mt-8 space-y-4" onSubmit={handleSubmit} noValidate>
+            {apiError && (
+                <div className="mt-4 rounded-xl border border-burgundy/20 bg-burgundy/5 px-4 py-3 text-sm text-burgundy">
+                    {apiError}
+                </div>
+            )}
+
+            <form className="mt-4 space-y-4" onSubmit={handleSubmit} noValidate>
                 <div>
                     <label className="mb-1.5 block text-sm font-medium text-plum/80">Email</label>
                     <div className="relative">
