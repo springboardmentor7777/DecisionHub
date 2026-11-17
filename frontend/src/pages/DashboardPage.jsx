@@ -1,16 +1,186 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const CATEGORIES = ["Career", "Education", "Technology", "Travel", "Finance", "Lifestyle"];
+const STORE_KEY = "decisionhub-boards";
 
 const readBoards = () => {
   try {
-    return JSON.parse(localStorage.getItem("decisionhub-boards")) || [];
+    return JSON.parse(localStorage.getItem(STORE_KEY)) || [];
   } catch {
     return [];
   }
 };
 
-// ---------------- USER DASHBOARD ----------------
+const panel = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
+const field = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
+const primaryButton = "rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700";
+const secondaryButton = "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50";
+
+function DashboardShell({ role, children, activePage, setActivePage }) {
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const roleName = role === "admin" ? "Administrator" : role === "moderator" ? "Moderator" : "User";
+  const links = role === "admin"
+    ? ["Overview", "Users", "Roles", "Decisions", "Analytics", "Settings"]
+    : role === "moderator"
+      ? ["Overview", "Reported Content", "Discussions", "Comments", "Guidelines", "History"]
+      : ["Overview", "My Decisions", "Create Decision", "Community", "Settings"];
+
+  async function handleLogout() {
+    try {
+      if (typeof logout === "function") await logout();
+    } finally {
+      navigate("/", { replace: true });
+    }
+  }
+
+  function selectPage(item) {
+    setActivePage(item);
+    if (item === "Create Decision") {
+      window.dispatchEvent(new Event("decisionhub:create"));
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-800">
+      <div className="flex min-h-screen">
+        <aside className="hidden w-64 shrink-0 flex-col bg-slate-950 text-slate-100 md:flex">
+          <div className="border-b border-white/10 px-6 py-6">
+            <div className="text-2xl font-extrabold tracking-tight">
+              Decision<span className="text-indigo-400">Hub</span>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">{roleName} workspace</p>
+          </div>
+          <nav className="flex-1 space-y-1 px-3 py-5" aria-label="Dashboard navigation">
+            {links.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => selectPage(item)}
+                className={`w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition ${
+                  activePage === item ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <span className="mr-2">{item === "Overview" ? "▦" : item === "Settings" ? "⚙" : "◈"}</span>
+                {item}
+              </button>
+            ))}
+          </nav>
+          <div className="border-t border-white/10 p-4 text-xs text-slate-400">DecisionHub · Dashboard</div>
+        </aside>
+
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+            <div className="flex items-center gap-3">
+              <div className="text-lg font-extrabold text-indigo-700 md:hidden">DecisionHub</div>
+              <div className="hidden text-sm text-slate-500 md:block">{roleName} / {activePage}</div>
+              <select
+                className={`${field} max-w-48 md:hidden`}
+                value={activePage}
+                onChange={(event) => selectPage(event.target.value)}
+                aria-label="Dashboard section"
+              >
+                {links.map((item) => <option key={item}>{item}</option>)}
+              </select>
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileOpen((value) => !value)}
+                className="flex items-center gap-2 rounded-full border border-slate-200 p-1.5 pr-3 hover:bg-slate-50"
+                aria-label="Open profile menu"
+                aria-expanded={profileOpen}
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 font-bold text-indigo-700">U</span>
+                <span className="hidden text-left sm:block">
+                  <span className="block text-sm font-semibold">My Account</span>
+                  <span className="block text-xs text-slate-500">{roleName}</span>
+                </span>
+                <span className="text-slate-500">⌄</span>
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                  <button
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    onClick={() => { setActivePage("Profile"); setProfileOpen(false); }}
+                  >
+                    My Profile
+                  </button>
+                  <button
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                    onClick={() => { setActivePage("Settings"); setProfileOpen(false); }}
+                  >
+                    Settings
+                  </button>
+                  <div className="my-1 border-t border-slate-100" />
+                  <button
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    onClick={handleLogout}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          </header>
+          <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">{children}</main>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Heading({ title, subtitle, action }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
+        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function StatCards({ items }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {items.map(([label, value]) => (
+        <div key={label} className={panel}>
+          <p className="text-sm text-slate-500">{label}</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Empty({ children }) {
+  return <p className="py-10 text-center text-sm text-slate-500">{children}</p>;
+}
+
+function Modal({ title, onClose, children }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <section className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-xl font-bold">{title}</h2>
+          <button type="button" onClick={onClose} className="text-2xl text-slate-400 hover:text-slate-700" aria-label="Close">×</button>
+        </div>
+        {children}
+      </section>
+    </div>
+  );
+}
+
 export function UserDashboard() {
   const [boards, setBoards] = useState(readBoards);
   const [search, setSearch] = useState("");
@@ -25,10 +195,15 @@ export function UserDashboard() {
   const [pro, setPro] = useState("");
   const [con, setCon] = useState("");
   const [comment, setComment] = useState("");
+  const [activePage, setActivePage] = useState("Overview");
+
+  useEffect(() => { localStorage.setItem(STORE_KEY, JSON.stringify(boards)); }, [boards]);
 
   useEffect(() => {
-    localStorage.setItem("decisionhub-boards", JSON.stringify(boards));
-  }, [boards]);
+    const openForm = () => setShowForm(true);
+    window.addEventListener("decisionhub:create", openForm);
+    return () => window.removeEventListener("decisionhub:create", openForm);
+  }, []);
 
   const visibleBoards = useMemo(() => boards.filter((board) =>
     board.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -36,353 +211,222 @@ export function UserDashboard() {
     (status === "All" || board.status === status)
   ), [boards, search, category, status]);
 
-  const totalVotes = boards.reduce(
-    (sum, board) => sum + board.options.reduce((n, option) => n + option.votes, 0), 0
-  );
-  const activeBoards = boards.filter((board) => board.status === "Active").length;
+  const totalVotes = boards.reduce((sum, board) => sum + board.options.reduce((n, option) => n + option.votes, 0), 0);
   const totalComments = boards.reduce((sum, board) => sum + board.comments.length, 0);
+  const selectedBoard = boards.find((board) => board.id === selected);
 
   function createBoard(event) {
     event.preventDefault();
-    const names = options.map((option) => option.trim()).filter(Boolean);
+    const names = options.map((value) => value.trim()).filter(Boolean);
     if (!title.trim() || names.length < 2 || names.length > 5) {
       window.alert("Enter a title and between 2 and 5 options.");
       return;
     }
-
     setBoards((current) => [{
-      id: Date.now(),
-      title: title.trim(),
-      description: description.trim(),
-      category: newCategory,
-      status: "Active",
+      id: Date.now(), title: title.trim(), description: description.trim(),
+      category: newCategory, status: "Active",
       options: names.map((name) => ({ name, votes: 0 })),
       pros: pro.trim() ? [pro.trim()] : [],
-       cons: con.trim() ? [con.trim()] : [],
+      cons: con.trim() ? [con.trim()] : [],
       comments: []
     }, ...current]);
-
-    setTitle("");
-    setDescription("");
-    setOptions(["", ""]);
-    setPro("");
-    setCon("");
-    setShowForm(false);
-  }
-
-  function vote(boardId, optionName) {
-    setBoards((current) => current.map((board) =>
-      board.id !== boardId || board.status !== "Active"
-        ? board
-        : {
-            ...board,
-            options: board.options.map((option) =>
-              option.name === optionName
-                ? { ...option, votes: option.votes + 1 }
-                : option
-            )
-          }
-    ));
+    setTitle(""); setDescription(""); setOptions(["", ""]); setPro(""); setCon("");
+    setShowForm(false); setActivePage("Overview");
   }
 
   function addComment(event) {
     event.preventDefault();
-    if (!comment.trim() || !selected) return;
-
-    setBoards((current) => current.map((board) =>
-      board.id === selected.id
-        ? { ...board, comments: [...board.comments, { id: Date.now(), text: comment.trim() }] }
-        : board
+    if (!comment.trim() || !selectedBoard) return;
+    setBoards((current) => current.map((board) => board.id === selectedBoard.id
+      ? { ...board, comments: [...board.comments, { id: Date.now(), text: comment.trim() }] }
+      : board
     ));
     setComment("");
   }
 
-  const selectedBoard = boards.find((board) => board.id === selected?.id);
-  
+  const toggleStatus = (id) => setBoards((current) => current.map((board) =>
+    board.id === id ? { ...board, status: board.status === "Active" ? "Completed" : "Active" } : board
+  ));
+
   return (
-    <DashboardShell>
-      <DashboardHeading
-        title="User Dashboard"
-        subtitle="Create decisions, compare options and participate in community voting."
-        action={<button onClick={() => setShowForm(true)} className={primaryButton}>+ Create decision</button>}
-      />
-
-      <StatsGrid items={[
-        ["Decision boards", boards.length],
-        ["Active decisions", activeBoards],
-        ["Total votes", totalVotes],
-        ["Comments", totalComments]
-      ]} />
-
-      <section className={panel}>
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold">Decision boards</h2>
-            <p className="text-sm text-slate-500">Search, filter and participate in decisions.</p>
-          </div>
-          <input value={search} onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search boards..." className={inputClass} />
-        </div>
-
-        <div className="mb-5 flex flex-wrap gap-3">
-          <select value={category} onChange={(event) => setCategory(event.target.value)} className={inputClass}>
-            <option value="All">All categories</option>
-            {CATEGORIES.map((item) => <option key={item}>{item}</option>)}
-          </select>
-          <select value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}>
-            <option value="All">All statuses</option>
-            <option>Active</option>
-            <option>Completed</option>
-          </select>
-        </div>
-
-        <div className="space-y-4">
-          {visibleBoards.map((board) => {
-            const votes = board.options.reduce((sum, option) => sum + option.votes, 0);
-            return (
-              <article key={board.id} className="rounded-xl border border-slate-200 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-bold">{board.title}</h3>
-                    <p className="mt-1 text-sm text-slate-500">{board.description}</p>
-                    <p className="mt-2 text-xs text-indigo-600">{board.category} · {board.status} · {votes} votes</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setSelected(board)} className={secondaryButton}>Details</button>
-                    <button onClick={() => setBoards((current) => current.map((item) =>
-                      item.id === board.id ? { ...item, status: item.status === "Active" ? "Completed" : "Active" } : item
-                    ))} className={secondaryButton}>
-                      {board.status === "Active" ? "Close" : "Reopen"}
-                    </button>
-                    <button onClick={() => {
-                      if (window.confirm("Delete this board?")) {
-                        setBoards((current) => current.filter((item) => item.id !== board.id));
-                      }
-                    }} className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50">Delete</button>
-                  </div>
-                </div>
-
-                <div className="mt-4 space-y-3">
-                  {board.options.map((option) => {
-                    const percent = votes ? Math.round(option.votes / votes * 100) : 0;
-                    return (
-                      <div key={option.name} className="space-y-2">
-                        <div className="mb-1 flex justify-between text-sm">
-                          <span>{option.name}</span>
-                          <span>{option.votes} votes ({percent}%)</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-slate-100">
-                          <div className="h-2 rounded-full bg-indigo-500" style={{ width: `${percent}%` }} />
-                        </div>
-                        {board.status === "Active" && (
-                          <button onClick={() => vote(board.id, option.name)}
-                            className="mt-2 rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">
-                            Vote for {option.name}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </article>
-            );
-          })}
-          {!visibleBoards.length && (
-            <p className="py-10 text-center text-slate-500">No decision boards found. Create a board to get started.</p>
-          )}
-        </div>
-      </section>
-
-      {showForm && (
-        <Modal onClose={() => setShowForm(false)}>
-          <form onSubmit={createBoard} className="space-y-4">
-            <h2 className="text-xl font-bold">Create decision board</h2>
-            <label className="block text-sm font-medium">Decision title
-              <input required value={title} onChange={(event) => setTitle(event.target.value)} className={`${inputClass} mt-1 w-full`} />
-              </label>
-            <label className="block text-sm font-medium">Description
-              <textarea value={description} onChange={(event) => setDescription(event.target.value)} className={`${inputClass} mt-1 w-full`} rows="2" />
-            </label>
-            <label className="block text-sm font-medium">Category
-              <select value={newCategory} onChange={(event) => setNewCategory(event.target.value)} className={`${inputClass} mt-1 w-full`}>
+    <DashboardShell role="user" activePage={activePage} setActivePage={setActivePage}>
+      {activePage === "Profile" ? (
+        <section className={panel}><Heading title="My Profile" subtitle="Your account profile." /><p className="mt-4 text-sm text-slate-500">Your profile details are managed by your connected account.</p></section>
+      ) : activePage === "Settings" ? (
+        <section className={panel}><Heading title="Settings" subtitle="Account preferences." /><p className="mt-4 text-sm text-slate-500">Settings can be connected to your backend.</p></section>
+      ) : activePage === "Community" ? (
+        <section className={panel}><Heading title="Community" subtitle="Browse and participate in community decisions." /></section>
+      ) : (
+        <>
+          <Heading
+            title="User Dashboard"
+            subtitle="Create decisions, compare options and participate in community voting."
+            action={<button onClick={() => setShowForm(true)} className={primaryButton}>+ Create decision</button>}
+          />
+          <StatCards items={[
+            ["Decision boards", boards.length],
+            ["Active decisions", boards.filter((board) => board.status === "Active").length],
+            ["Total votes", totalVotes],
+            ["Comments", totalComments]
+          ]} />
+          <section className={panel}>
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="text-xl font-bold">Decision boards</h2><p className="text-sm text-slate-500">Search, filter and participate in decisions.</p></div>
+              <input className={`${field} max-w-xs`} placeholder="Search boards..." value={search} onChange={(event) => setSearch(event.target.value)} />
+            </div>
+            <div className="mb-5 flex flex-wrap gap-3">
+              <select className={`${field} max-w-48`} value={category} onChange={(event) => setCategory(event.target.value)}>
+                <option value="All">All categories</option>
                 {CATEGORIES.map((item) => <option key={item}>{item}</option>)}
               </select>
-            </label>
+              <select className={`${field} max-w-48`} value={status} onChange={(event) => setStatus(event.target.value)}>
+                <option value="All">All statuses</option><option>Active</option><option>Completed</option>
+              </select>
+            </div>
+            <div className="space-y-4">
+              {visibleBoards.map((board) => {
+                const votes = board.options.reduce((sum, option) => sum + option.votes, 0);
+                return (
+                  <article key={board.id} className="rounded-xl border border-slate-200 p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold">{board.title}</h3>
+                        <p className="mt-1 text-sm text-slate-500">{board.description}</p>
+                        <p className="mt-2 text-xs text-indigo-600">{board.category} · {board.status} · {votes} votes</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button className={secondaryButton} onClick={() => setSelected(board.id)}>Details</button>
+                        <button className={secondaryButton} onClick={() => toggleStatus(board.id)}>{board.status === "Active" ? "Close" : "Reopen"}</button>
+                        <button className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={() => window.confirm("Delete this board?") && setBoards((current) => current.filter((item) => item.id !== board.id))}>Delete</button>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      {board.options.map((option) => {
+                        const percent = votes ? Math.round(option.votes / votes * 100) : 0;
+                        return (
+                          <div key={option.name}>
+                            <div className="flex justify-between text-sm"><span>{option.name}</span><span>{option.votes} votes ({percent}%)</span></div>
+                            <div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-indigo-500" style={{ width: `${percent}%` }} /></div>
+                            {board.status === "Active" && <button className="mt-2 rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100" onClick={() => setBoards((current) => current.map((item) => item.id !== board.id ? item : { ...item, options: item.options.map((choice) => choice.name === option.name ? { ...choice, votes: choice.votes + 1 } : choice) }))}>Vote for {option.name}</button>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                );
+              })}
+              {!visibleBoards.length && <Empty>No decision boards found. Create a board to get started.</Empty>}
+            </div>
+          </section>
+        </>
+      )}
+
+      {showForm && (
+        <Modal title="Create decision board" onClose={() => setShowForm(false)}>
+          <form onSubmit={createBoard} className="space-y-4">
+            <label className="block text-sm font-medium">Decision title<input required className={`${field} mt-1`} value={title} onChange={(event) => setTitle(event.target.value)} /></label>
+            <label className="block text-sm font-medium">Description<textarea className={`${field} mt-1`} rows="2" value={description} onChange={(event) => setDescription(event.target.value)} /></label>
+            <label className="block text-sm font-medium">Category<select className={`${field} mt-1`} value={newCategory} onChange={(event) => setNewCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select></label>
             <div>
               <p className="mb-2 text-sm font-medium">Voting options (2–5)</p>
-              {options.map((option, index) => (
+              {options.map((value, index) => (
                 <div key={index} className="mb-2 flex gap-2">
-                  <input value={option} onChange={(event) => setOptions((current) =>
-                    current.map((item, i) => i === index ? event.target.value : item)
-                  )} placeholder={`Option ${index + 1}`} className={`${inputClass} min-w-0 flex-1`} />
-                  {options.length > 2 && (
-                    <button type="button" onClick={() => setOptions((current) => current.filter((_, i) => i !== index))}>Remove</button>
-                  )}
+                  <input className={field} placeholder={`Option ${index + 1}`} value={value} onChange={(event) => setOptions((current) => current.map((item, i) => i === index ? event.target.value : item))} />
+                  {options.length > 2 && <button type="button" className={secondaryButton} onClick={() => setOptions((current) => current.filter((_, i) => i !== index))}>Remove</button>}
                 </div>
               ))}
-              {options.length < 5 && (
-                <button type="button" onClick={() => setOptions((current) => [...current, ""])}
-                  className="text-sm font-semibold text-indigo-600">+ Add option</button>
-              )}
+              {options.length < 5 && <button type="button" className="text-sm font-semibold text-indigo-600" onClick={() => setOptions((current) => [...current, ""])}>+ Add option</button>}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">Key pro
-                <input value={pro} onChange={(event) => setPro(event.target.value)} className={`${inputClass} mt-1 w-full`} />
-              </label>
-              <label className="text-sm">Key con
-                <input value={con} onChange={(event) => setCon(event.target.value)} className={`${inputClass} mt-1 w-full`} />
-              </label>
+              <label className="text-sm">Key pro<input className={`${field} mt-1`} value={pro} onChange={(event) => setPro(event.target.value)} /></label>
+              <label className="text-sm">Key con<input className={`${field} mt-1`} value={con} onChange={(event) => setCon(event.target.value)} /></label>
             </div>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setShowForm(false)} className={secondaryButton}>Cancel</button>
-              <button className={primaryButton}>Publish board</button>
-            </div>
+            <div className="flex justify-end gap-2"><button type="button" className={secondaryButton} onClick={() => setShowForm(false)}>Cancel</button><button className={primaryButton}>Publish board</button></div>
           </form>
         </Modal>
       )}
-      
+
       {selectedBoard && (
-        <Modal onClose={() => setSelected(null)} side>
-          <h2 className="text-xl font-bold">{selectedBoard.title}</h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl bg-emerald-50 p-4">
-              <h3 className="font-semibold text-emerald-800">Pros</h3>
-              {selectedBoard.pros.map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}
-              {!selectedBoard.pros.length && <p className="mt-2 text-sm text-slate-500">No pros added.</p>}
-            </div>
-            <div className="rounded-xl bg-rose-50 p-4">
-              <h3 className="font-semibold text-rose-800">Cons</h3>
-              {selectedBoard.cons.map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}
-              {!selectedBoard.cons.length && <p className="mt-2 text-sm text-slate-500">No cons added.</p>}
-            </div>
+        <Modal title={selectedBoard.title} onClose={() => setSelected(null)}>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl bg-emerald-50 p-4"><h3 className="font-semibold text-emerald-800">Pros</h3>{(selectedBoard.pros || []).map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}{!selectedBoard.pros?.length && <p className="mt-2 text-sm text-slate-500">No pros added.</p>}</div>
+            <div className="rounded-xl bg-rose-50 p-4"><h3 className="font-semibold text-rose-800">Cons</h3>{(selectedBoard.cons || []).map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}{!selectedBoard.cons?.length && <p className="mt-2 text-sm text-slate-500">No cons added.</p>}</div>
           </div>
           <h3 className="mt-6 font-bold">Community comments</h3>
-          <div className="mt-3 space-y-2">
-            {selectedBoard.comments.map((item) => <p key={item.id} className="rounded-lg bg-slate-50 p-3 text-sm">{item.text}</p>)}
-            {!selectedBoard.comments.length && <p className="text-sm text-slate-500">No comments yet.</p>}
-          </div>
-          <form onSubmit={addComment} className="mt-4 flex gap-2">
-            <input value={comment} onChange={(event) => setComment(event.target.value)}
-              placeholder="Write a comment..." className={`${inputClass} min-w-0 flex-1`} />
-            <button className={primaryButton}>Post</button>
-          </form>
+          <div className="my-3 space-y-2">{selectedBoard.comments.map((item) => <p key={item.id} className="rounded-lg bg-slate-50 p-3 text-sm">{item.text}</p>)}{!selectedBoard.comments.length && <Empty>No comments yet.</Empty>}</div>
+          <form onSubmit={addComment} className="flex gap-2"><input className={field} placeholder="Write a comment..." value={comment} onChange={(event) => setComment(event.target.value)} /><button className={primaryButton}>Post</button></form>
         </Modal>
       )}
     </DashboardShell>
   );
 }
-// ---------------- ADMIN DASHBOARD ----------------
-export function AdminDashboard() {
-  return (
-    <DashboardShell>
-      <DashboardHeading title="Admin Dashboard"
-        subtitle="Platform administration and system oversight." />
-      <StatsGrid items={[
-        ["User management", "Manage"],
-        ["Decision boards", "Review"],
-        ["Platform analytics", "Reports"],
-        ["System settings", "Configure"]
-      ]} />
-      <section className={panel}>
-        <h2 className="mb-4 text-xl font-bold">Administration</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FeatureCard title="User Management" description="Manage user accounts and review account status." />
-          <FeatureCard title="Role Management" description="Review and manage role assignments." />
-          <FeatureCard title="Decision Management" description="Oversee decision boards across the platform." />
-          <FeatureCard title="Reports & Analytics" description="Review platform reports and participation analytics." />
-          <FeatureCard title="Content Oversight" description="Review platform content and community activity." />
-          <FeatureCard title="System Settings" description="Manage platform-level configuration." />
+
+function ManagementDashboard({ role }) {
+  const isAdmin = role === "admin";
+  const [activePage, setActivePage] = useState("Overview");
+  const [users, setUsers] = useState([
+    { id: 1, name: "Alex Morgan", role: "User", active: true },
+    { id: 2, name: "Jamie Lee", role: "Moderator", active: true },
+    { id: 3, name: "Taylor Kim", role: "User", active: false }
+  ]);
+  const [reports, setReports] = useState([
+    { id: 101, subject: "Inappropriate comment", status: "Pending" },
+    { id: 102, subject: "Spam decision board", status: "Pending" },
+    { id: 103, subject: "Harassment report", status: "Pending" }
+  ]);
+
+  const content = activePage === "Overview" ? (
+    <>
+      <StatCards items={isAdmin
+        ? [["Total users", users.length], ["Active users", users.filter((user) => user.active).length], ["Pending reports", reports.filter((report) => report.status === "Pending").length], ["Platform status", "Operational"]]
+        : [["Open reports", reports.filter((report) => report.status === "Pending").length], ["Resolved reports", reports.filter((report) => report.status === "Resolved").length], ["Users monitored", users.length], ["Community status", "Active"]]} />
+      <section className={panel}><h2 className="text-lg font-bold">{isAdmin ? "Administration overview" : "Moderation overview"}</h2><p className="mt-2 text-sm text-slate-500">{isAdmin ? "Use the sidebar to manage users and review platform areas." : "Use the sidebar to review reports and community discussions."}</p></section>
+    </>
+  ) : isAdmin && activePage === "Users" ? (
+    <section className={panel}>
+      <h2 className="mb-4 text-lg font-bold">User management</h2>
+      <div className="space-y-3">{users.map((user) => (
+        <div key={user.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+          <div><p className="font-semibold">{user.name}</p><p className="text-xs text-slate-500">{user.role} · {user.active ? "Active" : "Disabled"}</p></div>
+          <button className={secondaryButton} onClick={() => setUsers((current) => current.map((item) => item.id === user.id ? { ...item, active: !item.active } : item))}>{user.active ? "Disable user" : "Enable user"}</button>
         </div>
-      </section>
-    </DashboardShell>
-  );
-}
-
-// ---------------- MODERATOR DASHBOARD ----------------
-export function ModeratorDashboard() {
-  return (
-    <DashboardShell>
-      <DashboardHeading title="Moderator Dashboard"
-        subtitle="Review reports and help maintain a respectful community." />
-      <StatsGrid items={[
-        ["Reported content", "Review queue"],
-        ["Discussions", "Moderate"],
-        ["Comments", "Review"],
-        ["Guidelines", "Enforce"]
-      ]} />
-      <section className={panel}>
-        <h2 className="mb-4 text-xl font-bold">Community Moderation</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FeatureCard title="Reported Content" description="Review content reported by community members." />
-          <FeatureCard title="Discussion Moderation" description="Monitor discussions and address guideline violations." />
-          <FeatureCard title="Comment Review" description="Review comments for inappropriate or harmful content." />
-          <FeatureCard title="User Reports" description="Assess reports and take moderation action when authorized." />
-          <FeatureCard title="Community Guidelines" description="Help maintain community standards." />
-          <FeatureCard title="Moderation History" description="Review previously handled moderation cases." />
-        </div>
-      </section>
-    </DashboardShell>
-  );
-  }
-
-// ---------------- SHARED UI COMPONENTS ----------------
-const panel = "rounded-2xl bg-white p-5 shadow-sm";
-const inputClass = "rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-indigo-500";
-const primaryButton = "rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700";
-const secondaryButton = "rounded-lg border border-slate-300 px-3 py-2 text-sm hover:bg-slate-50";
-
-function DashboardShell({ children }) {
-  return <div className="min-h-screen bg-slate-100 p-5 text-slate-800 md:p-8">
-    <main className="mx-auto max-w-7xl space-y-6">{children}</main>
-  </div>;
-}
-
-function DashboardHeading({ title, subtitle, action }) {
-  return <header className="flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 className="text-3xl font-bold text-indigo-700">{title}</h1>
-      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-    </div>
-    {action}
-  </header>;
-}
-
-function StatsGrid({ items }) {
-  return <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    {items.map(([label, value]) => <div key={label} className="rounded-xl bg-white p-5 shadow-sm">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-2 text-lg font-bold text-slate-800">{value}</p>
-    </div>)}
-  </section>;
-}
-
-function FeatureCard({ title, description }) {
-  return <article className="rounded-xl border border-slate-200 p-5">
-    <h3 className="font-semibold">{title}</h3>
-    <p className="mt-2 text-sm text-slate-500">{description}</p>
-  </article>;
-}
-
-function Modal({ children, onClose, side = false }) {
-  return <div onMouseDown={(event) => {
-    if (event.target === event.currentTarget) onClose();
-  }} className={`fixed inset-0 z-50 flex bg-black/40 ${side ? "justify-end" : "items-center justify-center p-4"}`}>
-    <section className={`relative overflow-y-auto bg-white p-6 shadow-xl ${
-      side ? "h-full w-full max-w-lg" : "max-h-[90vh] w-full max-w-xl rounded-2xl"
-    }`}>
-      <button type="button" onClick={onClose}
-        className="absolute right-4 top-3 text-2xl text-slate-500 hover:text-slate-900" aria-label="Close">×</button>
-      <div className="pr-6">{children}</div>
+      ))}</div>
     </section>
-  </div>;
+  ) : !isAdmin && ["Reported Content", "Comments", "Discussions", "History"].includes(activePage) ? (
+    <section className={panel}>
+      <h2 className="mb-4 text-lg font-bold">{activePage}</h2>
+      <div className="space-y-3">{reports.map((report) => (
+        <div key={report.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 p-3">
+          <div><p className="font-semibold">{report.subject}</p><p className="text-xs text-slate-500">Report #{report.id} · {report.status}</p></div>
+          {report.status === "Pending" && <div className="flex gap-2">
+            <button className={secondaryButton} onClick={() => setReports((current) => current.map((item) => item.id === report.id ? { ...item, status: "Dismissed" } : item))}>Dismiss</button>
+            <button className={primaryButton} onClick={() => setReports((current) => current.map((item) => item.id === report.id ? { ...item, status: "Resolved" } : item))}>Resolve</button>
+          </div>}
+        </div>
+      ))}</div>
+    </section>
+  ) : (
+    <section className={panel}><h2 className="text-lg font-bold">{activePage}</h2><p className="mt-2 text-sm text-slate-500">{activePage === "Settings" ? "Platform settings will be connected to the backend." : activePage === "Analytics" ? "Analytics summaries will appear here when platform data is connected." : activePage === "Roles" ? "Role assignment is controlled by the authenticated backend." : activePage === "Guidelines" ? "Community rules and moderation guidance." : "This section is ready for its authorized backend workflow."}</p></section>
+  );
+
+  return (
+    <DashboardShell role={role} activePage={activePage} setActivePage={setActivePage}>
+      <Heading title={isAdmin ? "Admin Dashboard" : "Moderator Dashboard"} subtitle={isAdmin ? "Platform administration and system oversight." : "Review reports and help maintain a respectful community."} />
+      {content}
+    </DashboardShell>
+  );
 }
 
-// The active role should be supplied by the existing authenticated application.
-// Do not let users choose or promote their own role here.
-function DashboardPage({ role = "user" }) {
+export function AdminDashboard() {
+  return <ManagementDashboard role="admin" />;
+}
+
+export function ModeratorDashboard() {
+  return <ManagementDashboard role="moderator" />;
+}
+
+export default function DashboardPage({ role = "user" }) {
   if (role === "admin") return <AdminDashboard />;
   if (role === "moderator") return <ModeratorDashboard />;
   return <UserDashboard />;
 }
-
-export default DashboardPage;
