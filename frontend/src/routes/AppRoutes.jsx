@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import AuthLayout from '../layout/AuthLayout';
-import RequireAuth from './RequireAuth';
 
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
@@ -11,10 +11,7 @@ import ResetPasswordPage from '../pages/ResetPasswordPage';
 import DashboardPage from '../pages/DashboardPage';
 import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
 
-/**
- * Public Only Route Wrapper
- * If user is already authenticated, automatically redirects them to /dashboard.
- */
+// Public route wrapper
 const PublicOnlyRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
@@ -30,7 +27,8 @@ const PublicOnlyRoute = ({ children }) => {
 export const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Authentication Routes */}
+
+      {/* Login */}
       <Route
         path="/"
         element={
@@ -39,7 +37,13 @@ export const AppRoutes = () => {
           </PublicOnlyRoute>
         }
       />
-      <Route path="/login" element={<Navigate to="/" replace />} />
+
+      <Route
+        path="/login"
+        element={<Navigate to="/" replace />}
+      />
+
+      {/* Registration */}
       <Route
         path="/register"
         element={
@@ -48,6 +52,8 @@ export const AppRoutes = () => {
           </PublicOnlyRoute>
         }
       />
+
+      {/* Forgot Password */}
       <Route
         path="/forgot-password"
         element={
@@ -56,6 +62,8 @@ export const AppRoutes = () => {
           </PublicOnlyRoute>
         }
       />
+
+      {/* Reset Password */}
       <Route
         path="/reset-password"
         element={
@@ -65,21 +73,39 @@ export const AppRoutes = () => {
         }
       />
 
-      {/* Google OAuth2 callback (backend redirects here with ?token=...) */}
-      <Route path="/oauth2/redirect" element={<OAuth2RedirectPage />} />
-
-      {/* Protected Routes */}
+      {/* Google OAuth */}
       <Route
-        path="/dashboard"
-        element={
-          <RequireAuth>
-            <DashboardPage />
-          </RequireAuth>
-        }
+        path="/oauth2/redirect"
+        element={<OAuth2RedirectPage />}
       />
 
-      {/* Fallback Catch-all Route */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Dashboard Preview Routes */}
+      <Route
+        path="/dashboard"
+        element={<DashboardPage role="user" />}
+      />
+
+      <Route
+        path="/dashboard/user"
+        element={<DashboardPage role="user" />}
+      />
+
+      <Route
+        path="/dashboard/admin"
+        element={<DashboardPage role="admin" />}
+      />
+
+      <Route
+        path="/dashboard/moderator"
+        element={<DashboardPage role="moderator" />}
+      />
+
+      {/* Fallback */}
+      <Route
+        path="*"
+        element={<Navigate to="/dashboard" replace />}
+      />
+
     </Routes>
   );
 };
