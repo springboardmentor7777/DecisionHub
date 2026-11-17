@@ -136,6 +136,36 @@ body {
   font-size: 11px;
 }
 
+.dh-logout {
+  margin-left: auto;
+  padding: 6px 0 6px 8px;
+  border: 0;
+  background: transparent;
+  color: #777184;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+}
+
+.dh-logout:hover {
+  color: #7938d8;
+}
+
+.dh-auth-message {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  color: #29243a;
+  text-align: center;
+}
+
+.dh-auth-message a {
+  color: #7938d8;
+}
+
 /* Main */
 
 .dh-main {

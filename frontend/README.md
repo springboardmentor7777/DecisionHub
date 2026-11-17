@@ -1,16 +1,24 @@
-# React + Vite
+# DecisionHub frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Run locally
 
-Currently, two official plugins are available:
+1. Copy `.env.example` to `.env.local` and set `VITE_API_BASE_URL` to the Spring
+   Boot API origin. The default is `http://localhost:8080`.
+2. Install dependencies with `npm ci`.
+3. Start the frontend with `npm run dev`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The backend must be running and allow the frontend origin (`http://localhost:5173`)
+through CORS for authentication requests to work.
 
-## React Compiler
+## Authentication routes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `/` and `/login` — sign in
+- `/register` — create an account
+- `/forgot-password` — request a password reset email
+- `/reset-password?token=...` — set a new password from the email link
+- `/Dashboard.html` — authenticated dashboard; redirects to sign in without a
+  valid session
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The frontend stores the JWT in `sessionStorage` and validates a saved session
+with `GET /api/auth/me`. Login, registration, and password reset use the
+corresponding `/api/auth/*` endpoints.

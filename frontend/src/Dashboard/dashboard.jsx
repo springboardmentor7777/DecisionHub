@@ -1,5 +1,7 @@
 
-function Dashboard() {
+function Dashboard({ onLogout, user }) {
+  const displayName = user?.name || user?.email || "Member";
+  const avatar = displayName.slice(0, 1).toUpperCase();
   const menuItems = [
     "Overview",
     "My Decisions",
@@ -43,11 +45,14 @@ function Dashboard() {
         </nav>
 
         <div className="dh-user">
-          <div className="dh-avatar">R</div>
+          <div className="dh-avatar">{avatar}</div>
           <div>
-            <strong>...</strong>
-            <span>Member Account</span>
+            <strong>{displayName}</strong>
+            <span>{user?.role || "Member"} Account</span>
           </div>
+          <button className="dh-logout" onClick={onLogout} type="button">
+            Log out
+          </button>
         </div>
       </aside>
 
@@ -62,7 +67,7 @@ function Dashboard() {
           <div className="dh-top-right">
             <input placeholder="Search decisions..." />
             <button type="button" className="dh-bell">♧</button>
-            <div className="dh-avatar">R</div>
+            <div className="dh-avatar">{avatar}</div>
           </div>
         </header>
 
