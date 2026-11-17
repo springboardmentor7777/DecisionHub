@@ -5,7 +5,7 @@ import axios from 'axios';
  * Configured with baseURL, request interceptors for JWT, and standard error handling.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -57,18 +57,16 @@ apiClient.interceptors.response.use(
  */
 export const handleAxiosError = (error) => {
   if (error.response) {
-    // Server responded with an error status
-    const data = error.response.data;
+    const { data, status } = error.response;
+    // Backend error format: { "error": "message" }
+    if (data?.error) return data.error;
     if (data?.message) return data.message;
-    if (typeof data === 'string') return data;
-    if (data?.errors) {
-      const firstKey = Object.keys(data.errors)[0];
-      return data.errors[firstKey];
-    }
-    return `Server error (${error.response.status}). Please try again.`;
+    if (typeof data === 'string' && data) return data;
+    if (status === 401) return 'Incorrect email or password.';
+    return `Something went wrong on the server (error ${status}). Please try again.`;
   }
   if (error.request) {
-    return 'Unable to connect to DecisionHub server. Please check your network or try again.';
+    return 'Cannot reach the DecisionHub server. Check your connection and try again.';
   }
   return error.message || 'An unexpected error occurred.';
 };

@@ -8,7 +8,7 @@ import Checkbox from '../components/common/Checkbox';
 import Button from '../components/common/Button';
 import Alert from '../components/common/Alert';
 import SocialAuth from '../components/auth/SocialAuth';
-import { isPasswordAcceptable, MIN_PASSWORD_LENGTH } from '../components/auth/PasswordStrengthMeter';
+import { isPasswordAcceptable, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from '../components/auth/PasswordStrengthMeter';
 
 export const RegisterPage = () => {
   const navigate = useNavigate();
@@ -17,7 +17,6 @@ export const RegisterPage = () => {
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
-    role: 'user', // 'user' or 'communityModerator'
     password: '',
     confirmPassword: '',
     acceptTerms: false,
@@ -29,36 +28,40 @@ export const RegisterPage = () => {
     const errors = {};
 
     if (!formData.displayName.trim()) {
-      errors.displayName = 'Full name is required.';
+      errors.displayName = 'Enter your full name.';
     } else if (formData.displayName.trim().length < 2) {
-      errors.displayName = 'Name must be at least 2 characters.';
+      errors.displayName = 'Your name needs at least 2 characters.';
+    } else if (formData.displayName.trim().length > 80) {
+      errors.displayName = 'Your name can be at most 80 characters.';
     }
 
     if (!formData.email.trim()) {
-      errors.email = 'Email address is required.';
+      errors.email = 'Enter your email address.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      errors.email = 'Please provide a valid email format (e.g. name@domain.com).';
+      errors.email = 'Enter a valid email address, like name@example.com.';
     }
 
     if (!formData.password) {
-      errors.password = 'Password is required.';
+      errors.password = 'Create a password.';
     } else {
       if (formData.password.length < MIN_PASSWORD_LENGTH) {
-        errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
+        errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+      } else if (formData.password.length > MAX_PASSWORD_LENGTH) {
+        errors.password = `Use at most ${MAX_PASSWORD_LENGTH} characters.`;
       } else if (!isPasswordAcceptable(formData.password)) {
         errors.password =
-          'Password is too weak. Use a mix of uppercase, lowercase, numbers, and symbols.';
+          'Too weak. Mix upper and lower case letters with numbers or symbols.';
       }
     }
 
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password.';
+      errors.confirmPassword = 'Enter your password again.';
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match.';
+      errors.confirmPassword = "The passwords don't match.";
     }
 
     if (!formData.acceptTerms) {
-      errors.acceptTerms = 'You must accept the terms of service to create an account.';
+      errors.acceptTerms = 'Accept the terms to create your account.';
     }
 
     setFieldErrors(errors);
@@ -73,7 +76,6 @@ export const RegisterPage = () => {
       await register({
         displayName: formData.displayName,
         email: formData.email,
-        role: formData.role,
         password: formData.password,
       });
       navigate('/dashboard');
@@ -85,13 +87,13 @@ export const RegisterPage = () => {
   return (
     <AuthCard
       title="Create your account"
-      subtitle="Join DecisionHub to compare options and build collective intelligence"
+      subtitle="It takes a minute. You can start a board right after."
       footer={
         <p>
           Already have an account?{' '}
           <Link
             to="/"
-            className="font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+            className="font-bold text-brand-700 underline-offset-4 hover:underline"
           >
             Sign in
           </Link>
@@ -101,27 +103,25 @@ export const RegisterPage = () => {
       {authError && (
         <Alert
           type="error"
-          title="Registration Failed"
-          className="mb-4"
+          title="Couldn't create your account"
+          className="mb-5"
           onClose={() => setAuthError && setAuthError(null)}
         >
           {authError}
         </Alert>
       )}
 
-      {/* Social Registration */}
-      <div className="mb-5">
-        <SocialAuth dividerText="Or sign up with email" />
-      </div>
+      <SocialAuth dividerText="or sign up with email" />
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Full Name */}
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <Input
-          label="Full Name"
+          label="Full name"
           id="register-name"
           name="displayName"
           type="text"
-          placeholder="e.g. Alex Morgan"
+          placeholder="Alex Morgan"
+          autoComplete="name"
+          maxLength={80}
           value={formData.displayName}
           onChange={(e) => {
             setFormData({ ...formData, displayName: e.target.value });
@@ -131,14 +131,14 @@ export const RegisterPage = () => {
           required
         />
 
-        {/* Email Address */}
         <Input
-          label="Email Address"
+          label="Email"
           id="register-email"
           name="email"
           type="email"
-          placeholder="alex@domain.com"
+          placeholder="alex@example.com"
           autoComplete="email"
+          maxLength={254}
           value={formData.email}
           onChange={(e) => {
             setFormData({ ...formData, email: e.target.value });
@@ -148,46 +148,12 @@ export const RegisterPage = () => {
           required
         />
 
-        {/* Role Selector (Reflecting DecisionHub spec) */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Account Type
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, role: 'user' })}
-              className={`p-2.5 rounded-lg border text-left transition-all ${
-                formData.role === 'user'
-                  ? 'border-brand-500 bg-brand-50/50 text-brand-900 ring-1 ring-brand-500'
-                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              <div className="text-xs font-semibold">Standard User</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Vote & create boards</div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, role: 'communityModerator' })}
-              className={`p-2.5 rounded-lg border text-left transition-all ${
-                formData.role === 'communityModerator'
-                  ? 'border-brand-500 bg-brand-50/50 text-brand-900 ring-1 ring-brand-500'
-                  : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-              }`}
-            >
-              <div className="text-xs font-semibold">Community Moderator</div>
-              <div className="text-[10px] text-slate-500 mt-0.5">Moderate & pin advice</div>
-            </button>
-          </div>
-        </div>
-
-        {/* Password Input with Real-time Strength Meter */}
         <PasswordInput
-          label="Create Password"
+          label="Password"
           id="register-password"
           name="password"
           autoComplete="new-password"
+          maxLength={MAX_PASSWORD_LENGTH}
           value={formData.password}
           onChange={(e) => {
             setFormData({ ...formData, password: e.target.value });
@@ -198,12 +164,12 @@ export const RegisterPage = () => {
           required
         />
 
-        {/* Confirm Password */}
         <PasswordInput
-          label="Confirm Password"
+          label="Confirm password"
           id="register-confirm-password"
           name="confirmPassword"
           autoComplete="new-password"
+          maxLength={MAX_PASSWORD_LENGTH}
           value={formData.confirmPassword}
           onChange={(e) => {
             setFormData({ ...formData, confirmPassword: e.target.value });
@@ -214,44 +180,21 @@ export const RegisterPage = () => {
           required
         />
 
-        {/* Terms and Conditions Checkbox */}
-        <div className="pt-1">
-          <Checkbox
-            id="register-terms"
-            name="acceptTerms"
-            checked={formData.acceptTerms}
-            onChange={(e) => {
-              setFormData({ ...formData, acceptTerms: e.target.checked });
-              if (fieldErrors.acceptTerms) setFieldErrors({ ...fieldErrors, acceptTerms: null });
-            }}
-            label={
-              <span>
-                I agree to the{' '}
-                <a href="#terms" className="text-brand-600 hover:underline">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="#privacy" className="text-brand-600 hover:underline">
-                  Privacy Policy
-                </a>
-              </span>
-            }
-            error={fieldErrors.acceptTerms}
-          />
-        </div>
+        <Checkbox
+          id="register-terms"
+          name="acceptTerms"
+          checked={formData.acceptTerms}
+          onChange={(e) => {
+            setFormData({ ...formData, acceptTerms: e.target.checked });
+            if (fieldErrors.acceptTerms) setFieldErrors({ ...fieldErrors, acceptTerms: null });
+          }}
+          label="I agree to the Terms of Service and Privacy Policy"
+          error={fieldErrors.acceptTerms}
+        />
 
-        {/* Submit Button */}
-        <div className="pt-2">
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            fullWidth
-            loading={isSubmitting}
-          >
-            Create DecisionHub Account
-          </Button>
-        </div>
+        <Button type="submit" variant="primary" size="md" fullWidth loading={isSubmitting}>
+          Create account
+        </Button>
       </form>
     </AuthCard>
   );

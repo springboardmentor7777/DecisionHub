@@ -15,26 +15,26 @@ export const Button = ({
   ...props
 }) => {
   const baseClasses =
-    'relative inline-flex items-center justify-center font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed select-none rounded-lg';
+    'relative inline-flex items-center justify-center font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed select-none rounded-[10px] active:translate-y-px';
 
   const sizeClasses = {
-    sm: 'text-xs px-3 py-1.5 gap-1.5',
-    md: 'text-sm px-4 py-2.5 gap-2',
-    lg: 'text-base px-6 py-3 gap-2.5',
-  }[size] || 'text-sm px-4 py-2.5 gap-2';
+    sm: 'text-xs px-3 h-8 gap-1.5',
+    md: 'text-[15px] px-5 h-11 gap-2',
+    lg: 'text-base px-6 h-12 gap-2.5',
+  }[size] || 'text-[15px] px-5 h-11 gap-2';
 
   const variantClasses = {
     primary:
-      'bg-brand-600 hover:bg-brand-700 text-white shadow-sm hover:shadow focus:ring-brand-500 active:bg-brand-800',
+      'bg-brand-800 hover:bg-brand-900 text-white shadow-sm focus-visible:ring-brand-600 focus-visible:ring-offset-paper',
     secondary:
-      'bg-slate-900 hover:bg-slate-800 text-white shadow-sm focus:ring-slate-700 active:bg-slate-950',
+      'bg-ink hover:bg-black text-white shadow-sm focus-visible:ring-ink',
     outline:
-      'border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 focus:ring-brand-500 shadow-xs',
+      'border border-brand-900/20 bg-white hover:bg-brand-50 text-ink focus-visible:ring-brand-600',
     ghost:
-      'bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 focus:ring-slate-400',
+      'bg-transparent hover:bg-brand-900/5 text-ink/70 hover:text-ink focus-visible:ring-brand-600',
     danger:
-      'bg-red-600 hover:bg-red-700 text-white shadow-sm focus:ring-red-500 active:bg-red-800',
-  }[variant] || 'bg-brand-600 hover:bg-brand-700 text-white';
+      'bg-red-700 hover:bg-red-800 text-white shadow-sm focus-visible:ring-red-600',
+  }[variant] || 'bg-brand-800 hover:bg-brand-900 text-white';
 
   const widthClass = fullWidth ? 'w-full' : '';
 

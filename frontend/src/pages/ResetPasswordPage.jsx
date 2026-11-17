@@ -69,7 +69,7 @@ export const ResetPasswordPage = () => {
         <p>
           <Link
             to="/"
-            className="font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+            className="font-bold text-brand-700 underline-offset-4 hover:underline"
           >
             Return to login
           </Link>
@@ -78,13 +78,13 @@ export const ResetPasswordPage = () => {
     >
       {success ? (
         <div className="text-center py-4 space-y-3">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h3 className="font-semibold text-slate-800 text-base">Password Updated!</h3>
-          <p className="text-xs text-slate-500">
+          <h3 className="font-semibold text-ink text-base">Password Updated!</h3>
+          <p className="text-xs text-ink/60">
             Redirecting you to the sign-in page...
           </p>
         </div>

@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Backend: Dev Profile (H2 In-Memory)",
+      "request": "launch",
+      "mainClass": "com.decisionhub.DecisionHubApplication",
+      "projectName": "decisionhub-backend",
+      "vmArgs": "-Dspring.profiles.active=dev"
+    },
+    {
+      "type": "java",
+      "name": "Backend: Default Profile (MySQL)",
+      "request": "launch",
+      "mainClass": "com.decisionhub.DecisionHubApplication",
+      "projectName": "decisionhub-backend"
+    }
+  ]
+}
+

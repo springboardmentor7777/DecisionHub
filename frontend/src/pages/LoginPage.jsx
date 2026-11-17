@@ -28,13 +28,13 @@ export const LoginPage = () => {
   const validate = () => {
     const errors = {};
     if (!formData.email.trim()) {
-      errors.email = 'Email address is required.';
+      errors.email = 'Enter your email address.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      errors.email = 'Please provide a valid email format (e.g. name@domain.com).';
+      errors.email = 'Enter a valid email address, like name@example.com.';
     }
 
     if (!formData.password) {
-      errors.password = 'Password is required.';
+      errors.password = 'Enter your password.';
     }
 
     setFieldErrors(errors);
@@ -56,13 +56,13 @@ export const LoginPage = () => {
   return (
     <AuthCard
       title="Welcome back"
-      subtitle="Sign in to your decision boards and community votes"
+      subtitle="Sign in to see your boards and the votes that came in."
       footer={
         <p>
-          Don&apos;t have an account yet?{' '}
+          New to DecisionHub?{' '}
           <Link
             to="/register"
-            className="font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+            className="font-bold text-brand-700 underline-offset-4 hover:underline"
           >
             Create an account
           </Link>
@@ -72,28 +72,25 @@ export const LoginPage = () => {
       {authError && (
         <Alert
           type="error"
-          title="Authentication Failed"
-          className="mb-4"
+          title="Couldn't sign you in"
+          className="mb-5"
           onClose={() => setAuthError && setAuthError(null)}
         >
           {authError}
         </Alert>
       )}
 
-      {/* Social Login Button */}
-      <div className="mb-5">
-        <SocialAuth dividerText="Or sign in with email" />
-      </div>
+      <SocialAuth dividerText="or sign in with email" />
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-        {/* Email Input */}
+      <form onSubmit={handleSubmit} className="space-y-5" noValidate>
         <Input
-          label="Email Address"
+          label="Email"
           id="login-email"
           name="email"
           type="email"
-          placeholder="you@domain.com"
+          placeholder="you@example.com"
           autoComplete="email"
+          maxLength={254}
           value={formData.email}
           onChange={(e) => {
             setFormData({ ...formData, email: e.target.value });
@@ -103,55 +100,40 @@ export const LoginPage = () => {
           required
         />
 
-        {/* Password Input */}
-        <div>
-          <PasswordInput
-            label="Password"
-            id="login-password"
-            name="password"
-            autoComplete="current-password"
-            value={formData.password}
-            onChange={(e) => {
-              setFormData({ ...formData, password: e.target.value });
-              if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: null });
-            }}
-            error={fieldErrors.password}
-            required
-          />
-        </div>
+        <PasswordInput
+          label="Password"
+          id="login-password"
+          name="password"
+          autoComplete="current-password"
+          value={formData.password}
+          onChange={(e) => {
+            setFormData({ ...formData, password: e.target.value });
+            if (fieldErrors.password) setFieldErrors({ ...fieldErrors, password: null });
+          }}
+          error={fieldErrors.password}
+          required
+        />
 
-        {/* Remember Me & Forgot Password */}
-        <div className="flex items-center justify-between pt-1 text-sm">
+        <div className="flex items-center justify-between text-sm">
           <Checkbox
             id="remember-me"
             name="rememberMe"
-            label="Remember me"
+            label="Keep me signed in"
             checked={formData.rememberMe}
-            onChange={(e) =>
-              setFormData({ ...formData, rememberMe: e.target.checked })
-            }
+            onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
           />
 
           <Link
             to="/forgot-password"
-            className="text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
+            className="text-sm font-semibold text-brand-700 underline-offset-4 hover:underline"
           >
             Forgot password?
           </Link>
         </div>
 
-        {/* Submit Button */}
-        <div className="pt-2">
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            fullWidth
-            loading={isSubmitting}
-          >
-            Sign in to DecisionHub
-          </Button>
-        </div>
+        <Button type="submit" variant="primary" size="md" fullWidth loading={isSubmitting}>
+          Sign in
+        </Button>
       </form>
     </AuthCard>
   );

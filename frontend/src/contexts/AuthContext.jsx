@@ -1,7 +1,12 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import authApi from '../api/auth';
 
 export const AuthContext = createContext(null);
+
+// Public auth screens. An error shown on one of these should not follow the
+// user to another one (e.g. a failed login must not appear on the register page).
+const AUTH_PATHS = ['/', '/register', '/forgot-password', '/reset-password'];
 
 const STORAGE_KEYS = {
   TOKEN: 'dh_token',
@@ -36,6 +41,19 @@ export const AuthProvider = ({ children }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [authError, setAuthError] = useState(null);
+
+  // Clear a stale error when the user moves between auth pages.
+  // Errors set elsewhere (Google sign-in failure, expired session) are kept,
+  // because those arrive from /oauth2/redirect or a protected page.
+  const location = useLocation();
+  const previousPath = useRef(location.pathname);
+  useEffect(() => {
+    const previous = previousPath.current;
+    if (previous !== location.pathname && AUTH_PATHS.includes(previous)) {
+      setAuthError(null);
+    }
+    previousPath.current = location.pathname;
+  }, [location.pathname]);
 
   /**
    * Helper to persist or clear session tokens

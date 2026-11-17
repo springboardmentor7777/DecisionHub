@@ -9,10 +9,10 @@ export const RequireAuth = ({ children, allowedRoles }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-paper">
         <div className="text-center space-y-3">
-          <Spinner size="lg" className="text-brand-600" />
-          <p className="text-xs text-slate-500 font-medium">Verifying DecisionHub session...</p>
+          <Spinner size="lg" className="text-brand-700" />
+          <p className="text-xs text-ink/60 font-medium">Verifying DecisionHub session...</p>
         </div>
       </div>
     );
@@ -24,7 +24,7 @@ export const RequireAuth = ({ children, allowedRoles }) => {
 
   if (allowedRoles && (!role || !allowedRoles.includes(role))) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-paper px-4">
         <div className="max-w-md w-full bg-white p-8 rounded-xl border border-red-200 text-center shadow-sm">
           <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,7 +32,7 @@ export const RequireAuth = ({ children, allowedRoles }) => {
             </svg>
           </div>
           <h2 className="text-lg font-bold text-slate-900">Access Restricted</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-ink/60 mt-1">
             Your current role (<span className="font-semibold text-slate-700">{role}</span>) does not have permission to view this module.
           </p>
           <div className="mt-5">

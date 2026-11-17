@@ -24,7 +24,7 @@ export const Checkbox = ({
           checked={checked}
           onChange={onChange}
           disabled={disabled}
-          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50 cursor-pointer"
+          className="h-4 w-4 rounded accent-brand-700 border-brand-900/30 text-brand-700 focus:ring-brand-600 focus:ring-offset-0 disabled:opacity-50 cursor-pointer"
           {...props}
         />
       </div>
@@ -34,16 +34,16 @@ export const Checkbox = ({
             <label
               htmlFor={checkboxId}
               className={`font-medium select-none cursor-pointer ${
-                disabled ? 'text-slate-400' : 'text-slate-700'
+                disabled ? 'text-ink/40' : 'text-ink/80'
               }`}
             >
               {label}
             </label>
           )}
           {description && (
-            <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+            <p className="text-xs text-ink/55 mt-0.5">{description}</p>
           )}
-          {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+          {error && <p className="text-[13px] font-medium text-red-700 mt-1">{error}</p>}
         </div>
       )}
     </div>

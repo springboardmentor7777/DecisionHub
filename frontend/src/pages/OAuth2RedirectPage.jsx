@@ -33,10 +33,10 @@ export const OAuth2RedirectPage = () => {
   }, [params, navigate, loginWithToken, setAuthError]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-paper">
       <div className="text-center space-y-3">
-        <Spinner size="lg" className="text-brand-600" />
-        <p className="text-xs text-slate-500 font-medium">Completing Google sign-in...</p>
+        <Spinner size="lg" className="text-brand-700" />
+        <p className="text-xs text-ink/60 font-medium">Completing Google sign-in...</p>
       </div>
     </div>
   );

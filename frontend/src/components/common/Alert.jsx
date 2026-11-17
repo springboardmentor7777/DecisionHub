@@ -9,7 +9,7 @@ export const Alert = ({
 }) => {
   const styles = {
     error: {
-      bg: 'bg-red-50 border-red-200 text-red-800',
+      bg: 'bg-red-50 border-red-200 text-red-900',
       iconColor: 'text-red-500',
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -18,8 +18,8 @@ export const Alert = ({
       ),
     },
     success: {
-      bg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-      iconColor: 'text-emerald-500',
+      bg: 'bg-brand-50 border-brand-200 text-brand-900',
+      iconColor: 'text-brand-600',
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -36,8 +36,8 @@ export const Alert = ({
       ),
     },
     info: {
-      bg: 'bg-blue-50 border-blue-200 text-blue-800',
-      iconColor: 'text-blue-500',
+      bg: 'bg-brand-50 border-brand-200 text-brand-900',
+      iconColor: 'text-brand-600',
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -49,18 +49,18 @@ export const Alert = ({
   return (
     <div
       role="alert"
-      className={`rounded-lg border p-3.5 transition-all text-sm flex items-start gap-3 ${styles.bg} ${className}`}
+      className={`rounded-[10px] border p-3.5 text-sm flex items-start gap-3 ${styles.bg} ${className}`}
     >
       <div className={styles.iconColor}>{styles.icon}</div>
       <div className="flex-1">
-        {title && <h4 className="font-semibold mb-0.5">{title}</h4>}
-        <div className="text-sm opacity-90">{children}</div>
+        {title && <h4 className="font-bold mb-0.5">{title}</h4>}
+        <div className="text-sm leading-relaxed">{children}</div>
       </div>
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="text-slate-400 hover:text-slate-600 p-0.5 rounded focus:outline-none"
+          className="text-ink/40 hover:text-ink/70 p-0.5 rounded"
           aria-label="Dismiss alert"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

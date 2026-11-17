@@ -1,45 +1,165 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import Logo from '../components/common/Logo';
+
+/**
+ * Sample boards shown beside the form. They are illustrations, not live data.
+ */
+const SAMPLES = {
+  login: {
+    heading: 'Pick the option your people can back.',
+    text: 'Compare choices side by side, ask friends or a community to vote, and see where everyone lands.',
+    board: {
+      title: 'Goa or Bali for the March trip?',
+      options: [
+        { name: 'Goa', pct: 58, votes: 74 },
+        { name: 'Bali', pct: 42, votes: 54 },
+      ],
+      total: 128,
+      note: 'Closes in 2 days',
+    },
+  },
+  register: {
+    heading: 'Put your next decision to a vote.',
+    text: 'Create a board, list your options, and let friends or communities weigh in before you commit.',
+    board: {
+      title: 'Startup offer or corporate role?',
+      options: [
+        { name: 'Startup offer', pct: 47, votes: 101 },
+        { name: 'Corporate role', pct: 39, votes: 83 },
+        { name: 'Wait a year', pct: 14, votes: 30 },
+      ],
+      total: 214,
+      note: '12 comments',
+    },
+  },
+};
+
+const AVATARS = [
+  { initials: 'AM', cls: 'bg-brand-200 text-brand-900' },
+  { initials: 'RK', cls: 'bg-marigold-100 text-marigold-600' },
+  { initials: 'SP', cls: 'bg-brand-400 text-white' },
+];
+
+const SampleBoard = ({ board }) => (
+  <figure
+    aria-label="Example of a decision board"
+    className="relative mt-8 max-w-md lg:mt-10"
+  >
+    {/* second sheet peeking out behind the board */}
+    <div
+      aria-hidden="true"
+      className="absolute inset-x-4 -bottom-2.5 h-full rounded-2xl bg-white/20"
+    />
+    <div className="relative rounded-2xl bg-paper text-ink p-5 shadow-2xl shadow-black/25 lg:p-6">
+      <p className="text-xs font-semibold text-brand-700">Sample board</p>
+      <h3 className="mt-1 font-display text-xl font-bold leading-snug tracking-tight">
+        {board.title}
+      </h3>
+
+      <ul className="mt-5 space-y-4">
+        {board.options.map((opt, i) => {
+          const leading = i === 0;
+          return (
+            <li key={opt.name}>
+              <div className="flex items-baseline justify-between text-sm">
+                <span className={leading ? 'font-bold' : 'font-medium text-ink/75'}>
+                  {opt.name}
+                </span>
+                <span className="tabular-nums">
+                  <span className={leading ? 'font-bold' : 'font-semibold text-ink/75'}>
+                    {opt.pct}%
+                  </span>
+                  <span className="ml-2 hidden text-xs text-ink/50 lg:inline">{opt.votes} votes</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-2.5 rounded-full bg-brand-900/10 overflow-hidden">
+                <div
+                  className={`h-full origin-left rounded-full animate-grow-x ${
+                    leading ? 'bg-marigold-400' : 'bg-brand-400'
+                  }`}
+                  style={{ width: `${opt.pct}%`, animationDelay: `${350 + i * 150}ms` }}
+                />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+
+      <figcaption className="mt-6 flex items-center justify-between border-t border-brand-900/10 pt-4">
+        <div className="flex items-center">
+          <div className="flex -space-x-1.5">
+            {AVATARS.map((a) => (
+              <span
+                key={a.initials}
+                className={`inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-paper text-[10px] font-bold ${a.cls}`}
+              >
+                {a.initials}
+              </span>
+            ))}
+          </div>
+          <span className="ml-3 text-xs text-ink/60">{board.total} voted</span>
+        </div>
+        <span className="hidden text-xs font-medium text-ink/60 lg:block">{board.note}</span>
+      </figcaption>
+    </div>
+  </figure>
+);
 
 export const AuthLayout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between relative overflow-hidden">
-      {/* Background Decorative Gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-32 left-1/4 w-96 h-96 bg-brand-200/40 rounded-full blur-3xl opacity-70" />
-        <div className="absolute -top-20 right-1/4 w-96 h-96 bg-indigo-200/40 rounded-full blur-3xl opacity-70" />
-      </div>
+  const { pathname } = useLocation();
+  const sample = pathname.startsWith('/register') ? SAMPLES.register : SAMPLES.login;
 
-      {/* Top Simple Header */}
-      <header className="w-full max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-700 to-brand-500 text-white flex items-center justify-center font-bold text-sm shadow-sm group-hover:shadow transition-shadow">
-            DH
-          </div>
-          <span className="font-bold text-lg tracking-tight text-slate-900">
-            Decision<span className="text-brand-600">Hub</span>
-          </span>
+  return (
+    <div className="min-h-screen bg-paper md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      {/* Brand panel: tablet and up */}
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-brand-900 px-8 py-10 text-white md:flex lg:px-12 xl:px-16">
+        {/* faint concentric rings */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-40 -right-40 h-[34rem] w-[34rem] text-white/[0.06]"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="0.6"
+        >
+          <circle cx="50" cy="50" r="48" />
+          <circle cx="50" cy="50" r="36" />
+          <circle cx="50" cy="50" r="24" />
+          <circle cx="50" cy="50" r="12" />
+        </svg>
+
+        <Link to="/" aria-label="DecisionHub home" className="relative w-fit">
+          <Logo tone="light" />
         </Link>
 
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 font-medium text-slate-600">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Decision Intelligence v1.0
-          </span>
+        <div className="relative">
+          <h2 className="max-w-md font-display text-3xl font-bold leading-[1.15] tracking-tight lg:text-4xl xl:text-[2.75rem] xl:leading-[1.1]">
+            {sample.heading}
+          </h2>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-brand-100/85">
+            {sample.text}
+          </p>
+          <SampleBoard board={sample.board} />
         </div>
-      </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex items-center justify-center px-4 py-8">
-        {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full max-w-6xl mx-auto px-4 py-6 text-center text-xs text-slate-400">
-        <p>
-          &copy; {new Date().getFullYear()} DecisionHub — Collaborative Decision Intelligence & Community Polling Platform.
+        <p className="relative text-xs text-brand-200/70">
+          &copy; {new Date().getFullYear()} DecisionHub
         </p>
-      </footer>
+      </aside>
+
+      {/* Form column: the only thing shown on phones */}
+      <div className="flex min-h-screen flex-col px-5 py-8 min-[400px]:px-6 sm:px-10 md:px-8 lg:px-10">
+        <header className="md:hidden">
+          <Link to="/" aria-label="DecisionHub home" className="inline-block">
+            <Logo />
+          </Link>
+        </header>
+
+        <main className="flex flex-1 items-center justify-center py-10">
+          <div className="w-full max-w-[26rem]">{children}</div>
+        </main>
+      </div>
     </div>
   );
 };

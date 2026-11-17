@@ -48,7 +48,7 @@ export const ForgotPasswordPage = () => {
           Remember your credentials?{' '}
           <Link
             to="/"
-            className="font-semibold text-brand-600 hover:text-brand-700 underline underline-offset-2"
+            className="font-bold text-brand-700 underline-offset-4 hover:underline"
           >
             Back to login
           </Link>
@@ -57,15 +57,15 @@ export const ForgotPasswordPage = () => {
     >
       {isSent ? (
         <div className="text-center py-4 space-y-4">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 bg-brand-100 text-brand-700 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <h3 className="font-semibold text-slate-800 text-base">Check your inbox</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-              If an account exists for <span className="font-medium text-slate-700">{email}</span>, you will receive password reset instructions shortly.
+            <h3 className="font-semibold text-ink text-base">Check your inbox</h3>
+            <p className="text-xs text-ink/60 mt-1 max-w-xs mx-auto">
+              If an account exists for <span className="font-medium text-ink">{email}</span>, you will receive password reset instructions shortly.
             </p>
           </div>
           <div className="pt-2">
