@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
@@ -10,6 +9,7 @@ import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
 import DashboardPage from '../pages/DashboardPage';
 import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
+import RequireAuth from './RequireAuth';
 
 // Public route wrapper
 const PublicOnlyRoute = ({ children }) => {
@@ -22,6 +22,18 @@ const PublicOnlyRoute = ({ children }) => {
   }
 
   return <AuthLayout>{children}</AuthLayout>;
+};
+
+/**
+ * /dashboard opens the dashboard that matches the logged-in account's role.
+ * (Stored roles: 'administrator', 'communityModerator', 'user'.)
+ */
+const DashboardIndex = () => {
+  const { role } = useAuth();
+
+  if (role === 'administrator') return <DashboardPage role="admin" />;
+  if (role === 'communityModerator') return <DashboardPage role="moderator" />;
+  return <DashboardPage role="user" />;
 };
 
 export const AppRoutes = () => {
@@ -79,25 +91,41 @@ export const AppRoutes = () => {
         element={<OAuth2RedirectPage />}
       />
 
-      {/* Dashboard Preview Routes */}
+      {/* Dashboards: login required, and the role decides what you can open */}
       <Route
         path="/dashboard"
-        element={<DashboardPage role="user" />}
+        element={
+          <RequireAuth>
+            <DashboardIndex />
+          </RequireAuth>
+        }
       />
 
       <Route
         path="/dashboard/user"
-        element={<DashboardPage role="user" />}
+        element={
+          <RequireAuth>
+            <DashboardPage role="user" />
+          </RequireAuth>
+        }
       />
 
       <Route
         path="/dashboard/admin"
-        element={<DashboardPage role="admin" />}
+        element={
+          <RequireAuth allowedRoles={['administrator']}>
+            <DashboardPage role="admin" />
+          </RequireAuth>
+        }
       />
 
       <Route
         path="/dashboard/moderator"
-        element={<DashboardPage role="moderator" />}
+        element={
+          <RequireAuth allowedRoles={['communityModerator', 'administrator']}>
+            <DashboardPage role="moderator" />
+          </RequireAuth>
+        }
       />
 
       {/* Fallback */}
