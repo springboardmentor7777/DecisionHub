@@ -20,8 +20,12 @@ const secondaryButton = "rounded-lg border border-slate-300 bg-white px-3 py-2 t
 
 function DashboardShell({ role, children, activePage, setActivePage }) {
   const [profileOpen, setProfileOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
+
+  const displayName = user?.displayName || "My Account";
+  const initials =
+    (user?.displayName || "U").trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join("").toUpperCase() || "U";
 
   const roleName = role === "admin" ? "Administrator" : role === "moderator" ? "Moderator" : "User";
   const links = role === "admin"
@@ -96,15 +100,20 @@ function DashboardShell({ role, children, activePage, setActivePage }) {
                 aria-label="Open profile menu"
                 aria-expanded={profileOpen}
               >
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 font-bold text-indigo-700">U</span>
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">{initials}</span>
                 <span className="hidden text-left sm:block">
-                  <span className="block text-sm font-semibold">My Account</span>
+                  <span className="block max-w-[10rem] truncate text-sm font-semibold">{displayName}</span>
                   <span className="block text-xs text-slate-500">{roleName}</span>
                 </span>
                 <span className="text-slate-500">⌄</span>
               </button>
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                <div className="absolute right-0 mt-2 w-60 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                  <div className="px-3 pb-2 pt-1">
+                    <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
+                    {user?.email && <p className="truncate text-xs text-slate-500">{user.email}</p>}
+                  </div>
+                  <div className="mb-1 border-t border-slate-100" />
                   <button
                     className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
                     onClick={() => { setActivePage("Profile"); setProfileOpen(false); }}
