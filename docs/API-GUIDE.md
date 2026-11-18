@@ -188,6 +188,7 @@ To reply, set `parentId` to the ID of an existing comment on the same board. The
 ## Other API areas
 
 - **Profile:** `GET` and `PUT /api/users/me`; update the password with `PUT /api/users/me/password`.
+- **Administration:** `PATCH /api/admin/users/{id}/role` requires an administrator. Send `{"role":"USER"}`, `{"role":"MODERATOR"}`, or `{"role":"ADMIN"}` to change the account role.
 - **Communities:** `GET /api/communities` is public. Create, join, leave, or delete communities using the routes in the [backend API overview](../backend/README.md).
 - **Notifications:** `GET /api/notifications` and `PATCH /api/notifications/{id}/read` require authentication.
 - **Dashboard:** `GET /api/analytics/dashboard` requires authentication.

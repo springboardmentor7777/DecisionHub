@@ -3,6 +3,8 @@ package com.decisionhub;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.decisionhub.entity.Role;
+import com.decisionhub.repository.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class DecisionHubApiTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private UserRepository users;
 
     @Test
     void registersCreatesPublicBoardAndAcceptsAnonymousVote() throws Exception {
@@ -110,5 +113,61 @@ class DecisionHubApiTest {
 
         mockMvc.perform(get("/api/boards/" + boardId))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void regularUserCannotChangeAnotherUsersRole() throws Exception {
+        String token = registerAndGetToken("role-user@example.com");
+        var target = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"role-user-target@example.com","password":"password123","displayName":"Role Target"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long targetId = objectMapper.readTree(target.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(patch("/api/admin/users/" + targetId + "/role")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"MODERATOR\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").isNotEmpty());
+    }
+
+    @Test
+    void adminCanChangeAUsersRole() throws Exception {
+        String adminToken = registerAndGetToken("role-admin@example.com");
+        var admin = users.findByEmailIgnoreCase("role-admin@example.com").orElseThrow();
+        admin.setRole(Role.ADMIN);
+        users.saveAndFlush(admin);
+
+        MvcResult targetRegistration = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"role-target@example.com","password":"password123","displayName":"Role Target"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        long targetId = objectMapper.readTree(targetRegistration.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(patch("/api/admin/users/" + targetId + "/role")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"MODERATOR\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(targetId))
+                .andExpect(jsonPath("$.role").value("MODERATOR"));
+    }
+
+    private String registerAndGetToken(String email) throws Exception {
+        MvcResult registration = mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"" + email
+                                + "\",\"password\":\"password123\",\"displayName\":\"Role User\"}"))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return objectMapper.readTree(registration.getResponse().getContentAsString()).get("token").asText();
     }
 }

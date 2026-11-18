@@ -2,8 +2,10 @@ package com.decisionhub.config;
 
 import com.decisionhub.security.JwtAuthenticationFilter;
 import com.decisionhub.security.OAuth2LoginSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +41,15 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler((request, response, exception) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write("{\"error\":\"You do not have permission to perform this action\"}");
+                }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/moderation/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/boards/mine").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/boards/public", "/api/boards/*",
                                 "/api/boards/*/votes",

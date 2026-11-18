@@ -45,6 +45,7 @@ All routes are prefixed with `/api`. Send `Authorization: Bearer <token>` for au
 |---|---|
 | Authentication | `POST /auth/register`, `POST /auth/login` |
 | Profile | `GET /users/me`, `PUT /users/me`, `PUT /users/me/password` |
+| Administration | `PATCH /admin/users/{id}/role` (ADMIN only) |
 | Boards | `GET /boards/public`, `GET /boards/mine`, `POST /boards`, `GET /boards/{id}`, `PUT /boards/{id}`, `DELETE /boards/{id}`, `POST /boards/{id}/options` |
 | Voting | `POST /boards/{id}/votes`, `GET /boards/{id}/votes` |
 | Discussion | `GET /boards/{id}/comments`, `POST /boards/{id}/comments` |
@@ -56,7 +57,7 @@ Board creation requires at least two options. Visibility is `PUBLIC` or `PRIVATE
 
 Password updates require the current password. Email-based password recovery, invited private-board access, report exports, and scheduled/reminder notifications need additional mail, sharing, and reporting integrations and are not part of this initial backend implementation.
 
-Community categories are `CAREER`, `EDUCATION`, `TECHNOLOGY`, `TRAVEL`, `FINANCE`, `LIFESTYLE`, and `OTHER`. Account roles are `USER`, `MODERATOR`, and `ADMIN`; new accounts receive `USER`. Promote administrative accounts through a controlled database/admin process, never from public registration.
+Community categories are `CAREER`, `EDUCATION`, `TECHNOLOGY`, `TRAVEL`, `FINANCE`, `LIFESTYLE`, and `OTHER`. Account roles are `USER`, `MODERATOR`, and `ADMIN`; new accounts receive `USER`. Bootstrap the initial `ADMIN` through controlled provisioning; afterward, only an authenticated `ADMIN` can change account roles using `PATCH /api/admin/users/{id}/role`. Roles cannot be assigned during public registration.
 
 ## Tests
 

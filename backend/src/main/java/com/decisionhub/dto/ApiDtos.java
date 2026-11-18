@@ -24,6 +24,8 @@ public final class ApiDtos {
                                         @NotBlank @Size(min = 8, max = 72) String newPassword) {}
     public record ProfileResponse(Long id, String email, String displayName, Role role,
                                   String bio, String interests, Instant createdAt) {}
+    public record UserRoleUpdateRequest(@NotNull Role role) {}
+    public record UserRoleResponse(Long id, String email, Role role) {}
 
     public record OptionRequest(@NotBlank @Size(max = 160) String name,
                                 @Size(max = 2000) String description,

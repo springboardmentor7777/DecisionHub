@@ -49,6 +49,7 @@ public class AppUser {
     public String getInterests() { return interests; }
     public Instant getCreatedAt() { return createdAt; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
+    public void setRole(Role role) { this.role = role; }
     public void setBio(String bio) { this.bio = bio; }
     public void setInterests(String interests) { this.interests = interests; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
