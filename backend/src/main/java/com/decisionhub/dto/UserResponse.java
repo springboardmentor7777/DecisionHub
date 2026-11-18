@@ -1,6 +1,6 @@
+
 package com.decisionhub.dto;
 
-import com.decisionhub.entity.Role;
 import java.time.LocalDateTime;
 
 public class UserResponse {
@@ -8,14 +8,14 @@ public class UserResponse {
     private Long userId;
     private String fullName;
     private String email;
-    private Role role;
+    private String role;
     private LocalDateTime createdAt;
 
     public UserResponse() {
     }
 
     public UserResponse(Long userId, String fullName, String email,
-                        Role role, LocalDateTime createdAt) {
+                        String role, LocalDateTime createdAt) {
         this.userId = userId;
         this.fullName = fullName;
         this.email = email;
@@ -35,7 +35,7 @@ public class UserResponse {
         return email;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 

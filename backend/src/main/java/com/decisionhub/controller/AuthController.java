@@ -11,6 +11,8 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,6 +43,16 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
 
         LoginResponse response = authService.login(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // GET CURRENT LOGGED-IN USER (PROTECTED)
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UserResponse response = authService.getCurrentUser(userDetails.getUsername());
 
         return ResponseEntity.ok(response);
     }

@@ -1,6 +1,7 @@
 package com.decisionhub.config;
 
 import com.decisionhub.filter.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -22,9 +23,17 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity  // Batch 5: enables @PreAuthorize on controller methods
 public class SecurityConfig {
+
+    // B5: CORS origin is now environment-configurable.
+    // Set CORS_ORIGIN env var for production; falls back to localhost:5173 for development.
+    @Value("${CORS_ORIGIN:http://localhost:5173}")
+    private String corsOrigin;
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -42,6 +51,8 @@ public class SecurityConfig {
                     "/api/auth/register",
                     "/api/auth/login")
                 .permitAll()
+                // Batch 5: URL-level ADMIN restriction (backed up by @PreAuthorize on methods)
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(
@@ -57,7 +68,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedOrigins(List.of(corsOrigin));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setAllowCredentials(true);

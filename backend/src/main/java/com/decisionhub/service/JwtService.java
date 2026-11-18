@@ -28,7 +28,6 @@ public class JwtService {
 
     // Generate JWT token
     public String generateToken(String email) {
-
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
@@ -47,7 +46,6 @@ public class JwtService {
 
     // Validate JWT token
     public boolean isTokenValid(String token, String email) {
-
         Claims claims = extractAllClaims(token);
 
         return claims.getSubject().equals(email)
@@ -56,7 +54,6 @@ public class JwtService {
 
     // Extract all token claims
     private Claims extractAllClaims(String token) {
-
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()

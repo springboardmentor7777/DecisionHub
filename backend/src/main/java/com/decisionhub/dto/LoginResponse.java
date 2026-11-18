@@ -1,8 +1,6 @@
 
 package com.decisionhub.dto;
 
-import com.decisionhub.entity.Role;
-
 public class LoginResponse {
 
     private String accessToken;
@@ -11,18 +9,19 @@ public class LoginResponse {
     private Long userId;
     private String fullName;
     private String email;
-    private Role role;
+    private String role;
 
     public LoginResponse(
             String accessToken,
             Long userId,
             String fullName,
             String email,
-            Role role) {
+            String role,
+            long expiresIn) {
 
         this.accessToken = accessToken;
         this.tokenType = "Bearer";
-        this.expiresIn = 3600;
+        this.expiresIn = expiresIn;
         this.userId = userId;
         this.fullName = fullName;
         this.email = email;
@@ -53,7 +52,7 @@ public class LoginResponse {
         return email;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 }

@@ -8,9 +8,11 @@ import com.decisionhub.dto.RegisterRequest;
 import com.decisionhub.entity.User;
 import com.decisionhub.entity.Role;
 import com.decisionhub.repository.UserRepository;
+import com.decisionhub.repository.RoleRepository;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,20 +23,28 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AuthService {
 
+        // B7: jwt.expiration is in milliseconds (e.g. 3600000).
+        // expiresIn in the response is in seconds, so we divide by 1000.
+        @Value("${jwt.expiration:3600000}")
+        private long jwtExpirationMs;
+
         private final AuthenticationManager authenticationManager;
         private final JwtService jwtService;
         private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
         private final PasswordEncoder passwordEncoder;
 
         public AuthService(
-                        AuthenticationManager authenticationManager,
-                        JwtService jwtService,
-                        UserRepository userRepository,
-                        PasswordEncoder passwordEncoder) {
+                AuthenticationManager authenticationManager,
+                JwtService jwtService,
+                UserRepository userRepository,
+                RoleRepository roleRepository,
+                PasswordEncoder passwordEncoder) {
 
                 this.authenticationManager = authenticationManager;
                 this.jwtService = jwtService;
                 this.userRepository = userRepository;
+                this.roleRepository = roleRepository;
                 this.passwordEncoder = passwordEncoder;
         }
 
@@ -45,27 +55,31 @@ public class AuthService {
 
                 if (userRepository.existsByEmail(email)) {
                         throw new ResponseStatusException(
-                                        HttpStatus.CONFLICT,
-                                        "Email is already registered");
+                                HttpStatus.CONFLICT,
+                                "Email is already registered");
                 }
+
+                Role defaultRole = roleRepository.findByRoleName("USER")
+                        .orElseThrow(() -> new IllegalStateException(
+                                "USER role not found in database"));
 
                 User user = new User();
 
                 user.setFullName(request.getFullName().trim());
                 user.setEmail(email);
                 user.setPasswordHash(
-                                passwordEncoder.encode(request.getPassword()));
-                user.setRole(Role.USER);
+                        passwordEncoder.encode(request.getPassword()));
+                user.setRole(defaultRole);
                 user.setCreatedAt(LocalDateTime.now());
 
                 User savedUser = userRepository.save(user);
 
                 return new UserResponse(
-                                savedUser.getUserId(),
-                                savedUser.getFullName(),
-                                savedUser.getEmail(),
-                                savedUser.getRole(),
-                                savedUser.getCreatedAt());
+                        savedUser.getUserId(),
+                        savedUser.getFullName(),
+                        savedUser.getEmail(),
+                        savedUser.getRole().getRoleName(),
+                        savedUser.getCreatedAt());
         }
 
         // LOGIN
@@ -74,34 +88,35 @@ public class AuthService {
                 String email = request.getEmail().trim().toLowerCase();
 
                 authenticationManager.authenticate(
-                                new UsernamePasswordAuthenticationToken(
-                                                email,
-                                                request.getPassword()));
+                        new UsernamePasswordAuthenticationToken(
+                                email,
+                                request.getPassword()));
 
                 User user = userRepository.findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
                 String token = jwtService.generateToken(user.getEmail());
 
                 return new LoginResponse(
-                                token,
-                                user.getUserId(),
-                                user.getFullName(),
-                                user.getEmail(),
-                                user.getRole());
+                        token,
+                        user.getUserId(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getRole().getRoleName(),
+                        jwtExpirationMs / 1000);
         }
 
         // GET CURRENT USER
         public UserResponse getCurrentUser(String email) {
 
                 User user = userRepository.findByEmail(email)
-                                .orElseThrow(() -> new RuntimeException("User not found"));
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
                 return new UserResponse(
-                                user.getUserId(),
-                                user.getFullName(),
-                                user.getEmail(),
-                                user.getRole(),
-                                user.getCreatedAt());
+                        user.getUserId(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getRole().getRoleName(),
+                        user.getCreatedAt());
         }
 }

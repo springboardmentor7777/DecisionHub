@@ -22,17 +22,20 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role")
-    private Role role = Role.USER;
+    // B9 — EAGER fetch is intentional. CustomUserDetailsService loads the User
+    // by email on every authenticated request. The Role name is immediately needed
+    // to build the GrantedAuthority list. EAGER avoids a second SELECT on a
+    // single-row join table and keeps the code simple. Revisit if profiling shows
+    // N+1 issues at scale (e.g. bulk user queries).
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public User() {
     }
-
-    // Getters and setters
 
     public Long getUserId() {
         return userId;
