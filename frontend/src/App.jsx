@@ -11,10 +11,14 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        {/* Public Pages */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Dashboard and its sections */}
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/:section" element={<Dashboard />} />
 
       </Routes>
     </BrowserRouter>
