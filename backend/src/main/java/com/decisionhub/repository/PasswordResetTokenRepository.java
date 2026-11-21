@@ -1,12 +1,10 @@
 package com.decisionhub.repository;
 
 import com.decisionhub.entity.PasswordResetToken;
-import com.decisionhub.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.NoRepositoryBean;
 
-import java.util.Optional;
-
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
-    Optional<PasswordResetToken> findByTokenHash(String tokenHash);
-    void deleteByUser(User user);
+@NoRepositoryBean
+public interface PasswordResetTokenRepository
+        extends JpaRepository<PasswordResetToken, Long> {
 }

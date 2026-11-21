@@ -48,7 +48,7 @@ public class SecurityConfig {
                             "/api/auth/register", "/api/auth/login",
                             "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    .requestMatchers("/api/moderator/**").hasAnyRole("MODERATOR", "ADMIN")
+                    .requestMatchers("/api/moderator/**").hasAnyRole("COMMUNITY_MODERATOR", "ADMIN")
                     .anyRequest().authenticated())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

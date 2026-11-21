@@ -1,3 +1,7 @@
 package com.decisionhub.entity;
 
-public enum Role { USER, MODERATOR, ADMIN }
+public enum Role {
+    USER,
+    COMMUNITY_MODERATOR,
+    ADMIN
+}
