@@ -1,30 +1,34 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
-    LayoutDashboard, Vote, GitCompare, MessageSquare,
+    LayoutDashboard, Vote, GitCompare, MessageSquare, ClipboardList,
     LogOut, X, ChevronRight, Users, Flag, ShieldCheck,
     BarChart3, FileWarning,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const NAV_BY_ROLE = {
+
     user: [
-        { icon: LayoutDashboard, label: "Dashboard",  to: "/dashboard" },
-        { icon: Vote,            label: "My Polls",   to: "/dashboard/votes" },
-        { icon: GitCompare,      label: "Compare",    to: "/dashboard/compare" },
-        { icon: MessageSquare,   label: "Discuss",    to: "/dashboard/discuss" },
+        { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
+        { icon: ClipboardList, label: "All Boards", to: "/dashboard/boards" },
+        { icon: Vote, label: "My Polls", to: "/dashboard/votes" },
+        { icon: GitCompare, label: "Compare", to: "/dashboard/compare" },
+        { icon: MessageSquare, label: "Discuss", to: "/dashboard/discuss" },
+        { icon: Users, label: "Communities", to: "/dashboard/communities" },
     ],
+
     admin: [
-        { icon: LayoutDashboard, label: "Overview",      to: "/dashboard/admin" },
-        { icon: Users,           label: "Users",         to: "/dashboard/admin/users" },
-        { icon: BarChart3,       label: "Analytics",     to: "/dashboard/admin/analytics" },
-        { icon: Flag,            label: "Reports",       to: "/dashboard/admin/reports" },
+        { icon: LayoutDashboard, label: "Overview", to: "/dashboard/admin" },
+        { icon: Users, label: "Users", to: "/dashboard/admin/users" },
+        { icon: BarChart3, label: "Analytics", to: "/dashboard/admin/analytics" },
+        { icon: Flag, label: "Reports", to: "/dashboard/admin/reports" },
     ],
     moderator: [
-        { icon: LayoutDashboard, label: "Overview",      to: "/dashboard/moderator" },
-        { icon: FileWarning,     label: "Flagged Content", to: "/dashboard/moderator/flagged" },
-        { icon: MessageSquare,   label: "Discussions",   to: "/dashboard/moderator/discussions" },
-        { icon: ShieldCheck,     label: "Decisions",     to: "/dashboard/moderator/decisions" },
+        { icon: LayoutDashboard, label: "Overview", to: "/dashboard/moderator" },
+        { icon: FileWarning, label: "Flagged Content", to: "/dashboard/moderator/flagged" },
+        { icon: MessageSquare, label: "Discussions", to: "/dashboard/moderator/discussions" },
+        { icon: ShieldCheck, label: "Decisions", to: "/dashboard/moderator/decisions" },
     ],
 };
 

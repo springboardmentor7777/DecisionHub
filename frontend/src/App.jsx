@@ -14,6 +14,10 @@ import MyVotes from "./pages/dashboard/MyVotes.jsx";
 import Compare from "./pages/dashboard/Compare.jsx";
 import Discuss from "./pages/dashboard/Discuss.jsx";
 import AllBoards from "./pages/dashboard/AllBoards.jsx";
+import Communities from "./pages/dashboard/communities/Communities.jsx";
+import CreateCommunity from "./pages/dashboard/communities/CreateCommunity.jsx";
+import CommunityDetails from "./pages/dashboard/communities/CommunityDetails.jsx";
+import EditBoard from "./pages/dashboard/EditBoard.jsx";
 
 function RequireAuth({ children }) {
     const { user } = useAuth();
@@ -23,7 +27,7 @@ function RequireAuth({ children }) {
 function DashboardIndex() {
     const { user } = useAuth();
     if (!user) return <Navigate to="/login" replace />;
-    if (user.role === "admin")     return <Navigate to="/dashboard/admin" replace />;
+    if (user.role === "admin") return <Navigate to="/dashboard/admin" replace />;
     if (user.role === "moderator") return <Navigate to="/dashboard/moderator" replace />;
     return <UserDashboard />;
 }
@@ -34,33 +38,38 @@ export default function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<Navigate to="/login" replace />} />
-                    <Route path="/login"    element={<Login />} />
+                    <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
 
                     <Route path="/dashboard" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
                         <Route index element={<DashboardIndex />} />
 
                         {/* User routes */}
-                        <Route path="boards"      element={<AllBoards />} />
-                        <Route path="boards/new"  element={<CreateBoard />} />
-                        <Route path="polls/new"   element={<CreatePoll />} />
+                        <Route path="boards" element={<AllBoards />} />
+                        <Route path="boards/new" element={<CreateBoard />} />
+                        <Route path="boards/:id/edit" element={<EditBoard />} />
+                        <Route path="polls/new" element={<CreatePoll />} />
                         <Route path="compare/new" element={<CompareOptions />} />
                         <Route path="discuss/new" element={<OpenDiscussion />} />
-                        <Route path="votes"       element={<MyVotes />} />
-                        <Route path="compare"     element={<Compare />} />
-                        <Route path="discuss"     element={<Discuss />} />
+                        <Route path="votes" element={<MyVotes />} />
+                        <Route path="compare" element={<Compare />} />
+                        <Route path="discuss" element={<Discuss />} />
+                        <Route path="communities" element={<Communities />} />
+                        <Route path="communities/new" element={<CreateCommunity />} />
+                        <Route path="communities/:id" element={<CommunityDetails />} />
+
 
                         {/* Admin routes — each sidebar link → its own page */}
-                        <Route path="admin"           element={<AdminDashboard />} />
-                        <Route path="admin/users"     element={<AdminUsers />} />
+                        <Route path="admin" element={<AdminDashboard />} />
+                        <Route path="admin/users" element={<AdminUsers />} />
                         <Route path="admin/analytics" element={<AdminAnalytics />} />
-                        <Route path="admin/reports"   element={<AdminReports />} />
+                        <Route path="admin/reports" element={<AdminReports />} />
 
                         {/* Moderator routes — each sidebar link → its own page */}
-                        <Route path="moderator"                element={<ModeratorDashboard />} />
-                        <Route path="moderator/flagged"        element={<ModeratorFlagged />} />
-                        <Route path="moderator/discussions"    element={<ModeratorDiscussions />} />
-                        <Route path="moderator/decisions"      element={<ModeratorDecisions />} />
+                        <Route path="moderator" element={<ModeratorDashboard />} />
+                        <Route path="moderator/flagged" element={<ModeratorFlagged />} />
+                        <Route path="moderator/discussions" element={<ModeratorDiscussions />} />
+                        <Route path="moderator/decisions" element={<ModeratorDecisions />} />
                     </Route>
                 </Routes>
             </BrowserRouter>
