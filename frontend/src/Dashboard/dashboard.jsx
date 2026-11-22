@@ -1,7 +1,14 @@
 
+import { useState } from "react";
+import DecisionBoards from "./pages/DecisionBoards.jsx";
+import OptionComparison from "./pages/OptionComparison.jsx";
+
 function Dashboard({ onLogout, user }) {
+  const [activePage, setActivePage] = useState("Overview");
+
   const displayName = user?.name || user?.email || "Member";
   const avatar = displayName.slice(0, 1).toUpperCase();
+
   const menuItems = [
     "Overview",
     "My Decisions",
@@ -12,12 +19,13 @@ function Dashboard({ onLogout, user }) {
     "Analytics",
     "Notifications",
     "Reports",
-    "My Profile"
+    "My Profile",
   ];
+
+  const menuIcons = ["⌂", "▤", "⇄", "◉", "☷", "♧", "▥", "♢", "▧", "●"];
 
   return (
     <div className="dh-layout">
-
       <aside className="dh-sidebar">
         <div className="dh-brand">
           <div className="dh-logo">D</div>
@@ -33,12 +41,13 @@ function Dashboard({ onLogout, user }) {
           {menuItems.map((item, index) => (
             <button
               key={item}
-              className={`dh-menu-item ${index === 0 ? "active" : ""}`}
+              className={`dh-menu-item ${
+                activePage === item ? "active" : ""
+              }`}
               type="button"
+              onClick={() => setActivePage(item)}
             >
-              <span className="dh-menu-icon">
-                {["⌂", "▤", "⇄", "◉", "☷", "♧", "▥", "♢", "▧", "●"][index]}
-              </span>
+              <span className="dh-menu-icon">{menuIcons[index]}</span>
               {item}
             </button>
           ))}
@@ -50,70 +59,88 @@ function Dashboard({ onLogout, user }) {
             <strong>{displayName}</strong>
             <span>{user?.role || "Member"} Account</span>
           </div>
-          <button className="dh-logout" onClick={onLogout} type="button">
+          <button
+            className="dh-logout"
+            onClick={onLogout}
+            type="button"
+          >
             Log out
           </button>
         </div>
       </aside>
 
       <main className="dh-main">
-
         <header className="dh-topbar">
           <div>
-            <span className="dh-breadcrumb">Workspace / Overview</span>
-            <h2>Dashboard</h2>
+            <span className="dh-breadcrumb">
+              Workspace / {activePage}
+            </span>
+            <h2>
+              {activePage === "Overview" ? "Dashboard" : activePage}
+            </h2>
           </div>
 
           <div className="dh-top-right">
             <input placeholder="Search decisions..." />
-            <button type="button" className="dh-bell">♧</button>
+            <button type="button" className="dh-bell">
+              ♧
+            </button>
             <div className="dh-avatar">{avatar}</div>
           </div>
         </header>
 
         <section className="dh-content">
-          <div className="dh-welcome">
-            <div>
-              <h1>Welcome back ! 👋</h1>
-              <p>Here's what's happening with your decisions today.</p>
-            </div>
+          {activePage === "My Decisions" ? (
+            <DecisionBoards />
+          ) : activePage === "Compare Options" ? (
+            <OptionComparison />
+          ) : (
+            <>
+              <div className="dh-welcome">
+                <div>
+                  <h1>Welcome back! 👋</h1>
+                  <p>
+                    Here's what's happening with your decisions today.
+                  </p>
+                </div>
 
-            <button className="dh-create" type="button">
-              + Create Decision
-            </button>
-          </div>
+                <button className="dh-create" type="button">
+                  + Create Decision
+                </button>
+              </div>
 
-          <div className="dh-stats">
-            <div className="dh-card">
-              <span>Total Decisions</span>
-              <h2>0</h2>
-              <small>Across all categories</small>
-            </div>
+              <div className="dh-stats">
+                <div className="dh-card">
+                  <span>Total Decisions</span>
+                  <h2>0</h2>
+                  <small>Across all categories</small>
+                </div>
 
-            <div className="dh-card">
-              <span>Active Polls</span>
-              <h2>0</h2>
-              <small>Currently accepting votes</small>
-            </div>
+                <div className="dh-card">
+                  <span>Active Polls</span>
+                  <h2>0</h2>
+                  <small>Currently accepting votes</small>
+                </div>
 
-            <div className="dh-card">
-              <span>Communities</span>
-              <h2>0</h2>
-              <small>Groups you're connected to</small>
-            </div>
+                <div className="dh-card">
+                  <span>Communities</span>
+                  <h2>0</h2>
+                  <small>Groups you're connected to</small>
+                </div>
 
-            <div className="dh-card">
-              <span>Votes Received</span>
-              <h2>0</h2>
-              <small>Total participation</small>
-            </div>
-          </div>
+                <div className="dh-card">
+                  <span>Votes Received</span>
+                  <h2>0</h2>
+                  <small>Total participation</small>
+                </div>
+              </div>
 
-          <div className="dh-section">
-            <h2>Recent Decisions</h2>
-            <p>Your latest decision boards will appear here.</p>
-          </div>
-
+              <div className="dh-section">
+                <h2>Recent Decisions</h2>
+                <p>Your latest decision boards will appear here.</p>
+              </div>
+            </>
+          )}
         </section>
       </main>
     </div>
@@ -121,4 +148,3 @@ function Dashboard({ onLogout, user }) {
 }
 
 export default Dashboard;
-
