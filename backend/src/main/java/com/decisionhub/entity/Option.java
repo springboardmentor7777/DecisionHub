@@ -1,4 +1,3 @@
-
 package com.decisionhub.entity;
 
 import jakarta.persistence.*;
@@ -23,8 +22,7 @@ public class Option {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public Option() {
-    }
+    public Option() {}
 
     public Long getOptionId() { return optionId; }
     public void setOptionId(Long optionId) { this.optionId = optionId; }

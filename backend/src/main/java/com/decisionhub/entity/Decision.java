@@ -1,8 +1,9 @@
-
 package com.decisionhub.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "decisions")
@@ -27,6 +28,9 @@ public class Decision {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "poll_type", nullable = false, length = 30)
+    private String pollType = "SINGLE_CHOICE";
+
     @Column(length = 30)
     private String status = "OPEN";
 
@@ -39,11 +43,10 @@ public class Decision {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "poll_type", nullable = false, length = 30)
-    private String pollType = "SINGLE_CHOICE";
+    @OneToMany(mappedBy = "decision", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Option> options = new ArrayList<>();
 
-    public Decision() {
-    }
+    public Decision() {}
 
     public Long getDecisionId() { return decisionId; }
     public void setDecisionId(Long decisionId) { this.decisionId = decisionId; }
@@ -60,6 +63,9 @@ public class Decision {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public String getPollType() { return pollType; }
+    public void setPollType(String pollType) { this.pollType = pollType; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
@@ -72,6 +78,6 @@ public class Decision {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public String getPollType() { return pollType; }
-    public void setPollType(String pollType) { this.pollType = pollType; }
+    public List<Option> getOptions() { return options; }
+    public void setOptions(List<Option> options) { this.options = options; }
 }
