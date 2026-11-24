@@ -1,0 +1,9 @@
+.env
+*.env
+application-local.properties
+target/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+node_modules/
