@@ -7,6 +7,7 @@ import com.decisionhub.repository.BoardVoteRepository;
 import com.decisionhub.repository.DecisionBoardRepository;
 import com.decisionhub.repository.UserRepository;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +26,23 @@ public class BoardService {
         this.users = users;
     }
 
+    /** Public boards, newest first. All filters are optional and can be combined. */
     @Transactional(readOnly = true)
-    public List<BoardResponse> publicBoards() {
+    public List<BoardResponse> publicBoards(String category, String query, PollType pollType) {
         return boards.findAllByVisibilityOrderByCreatedAtDesc(BoardVisibility.PUBLIC).stream()
+                .filter(board -> matches(board, category, query, pollType))
                 .map(this::response).toList();
     }
 
+    /** The caller's own boards, newest first. All filters are optional and can be combined. */
     @Transactional(readOnly = true)
-    public List<BoardResponse> myBoards(String email) {
+    public List<BoardResponse> myBoards(String email, String category, String query,
+                                        PollType pollType, BoardVisibility visibility) {
         AppUser user = user(email);
-        return boards.findAllByOwner_IdOrderByCreatedAtDesc(user.getId()).stream().map(this::response).toList();
+        return boards.findAllByOwner_IdOrderByCreatedAtDesc(user.getId()).stream()
+                .filter(board -> visibility == null || board.getVisibility() == visibility)
+                .filter(board -> matches(board, category, query, pollType))
+                .map(this::response).toList();
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +65,9 @@ public class BoardService {
     @Transactional
     public BoardResponse update(Long id, String email, UpdateBoardRequest request) {
         DecisionBoard board = ownedBoard(id, email);
+        if (request.pollType() != board.getPollType() && votes.countByBoard_Id(id) > 0) {
+            throw new ConflictException("The poll type cannot be changed after voting has started");
+        }
         board.update(request.title().trim(), request.description(), request.category().trim(),
                 request.visibility(), request.pollType());
         return response(board);
@@ -64,7 +75,13 @@ public class BoardService {
 
     @Transactional
     public void delete(Long id, String email) {
-        DecisionBoard board = ownedBoard(id, email);
+        removeBoard(ownedBoard(id, email));
+    }
+
+    /** Deletes a board with its comments and votes. The caller must already have checked permissions. */
+    @Transactional
+    public void removeBoard(DecisionBoard board) {
+        Long id = board.getId();
         for (BoardComment comment : comments.findAllByBoard_IdOrderByCreatedAtDesc(id)) {
             comments.delete(comment);
             comments.flush();
@@ -81,6 +98,34 @@ public class BoardService {
         }
         board.addOption(new DecisionOption(request.name().trim(), request.description(),
                 request.pros(), request.cons(), request.score()));
+        return response(board);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OptionResponse> options(Long boardId, String email) {
+        return accessibleBoard(boardId, email).getOptions().stream().map(this::optionResponse).toList();
+    }
+
+    @Transactional
+    public BoardResponse updateOption(Long boardId, Long optionId, String email, OptionRequest request) {
+        DecisionBoard board = ownedBoard(boardId, email);
+        DecisionOption option = findOption(board, optionId);
+        option.update(request.name().trim(), request.description(), request.pros(), request.cons(),
+                request.score());
+        return response(board);
+    }
+
+    @Transactional
+    public BoardResponse deleteOption(Long boardId, Long optionId, String email) {
+        DecisionBoard board = ownedBoard(boardId, email);
+        DecisionOption option = findOption(board, optionId);
+        if (board.getOptions().size() <= 2) {
+            throw new ConflictException("A board needs at least 2 options");
+        }
+        if (votes.countByOption_Id(optionId) > 0) {
+            throw new ConflictException("This option already has votes and cannot be deleted");
+        }
+        board.getOptions().remove(option); // orphan removal deletes the option
         return response(board);
     }
 
@@ -107,10 +152,43 @@ public class BoardService {
         return users.findByEmailIgnoreCase(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
+    private DecisionOption findOption(DecisionBoard board, Long optionId) {
+        return board.getOptions().stream()
+                .filter(option -> option.getId().equals(optionId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Option not found"));
+    }
+
+    private static boolean matches(DecisionBoard board, String category, String query, PollType pollType) {
+        if (category != null && !category.isBlank() && !board.getCategory().equalsIgnoreCase(category.trim())) {
+            return false;
+        }
+        if (pollType != null && board.getPollType() != pollType) {
+            return false;
+        }
+        if (query != null && !query.isBlank()) {
+            String needle = query.trim().toLowerCase(Locale.ROOT);
+            boolean found = contains(board.getTitle(), needle)
+                    || contains(board.getDescription(), needle)
+                    || board.getOptions().stream().anyMatch(option -> contains(option.getName(), needle));
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean contains(String text, String needle) {
+        return text != null && text.toLowerCase(Locale.ROOT).contains(needle);
+    }
+
+    private OptionResponse optionResponse(DecisionOption option) {
+        return new OptionResponse(option.getId(), option.getName(), option.getDescription(),
+                option.getPros(), option.getCons(), option.getScore());
+    }
+
     private BoardResponse response(DecisionBoard board) {
-        List<OptionResponse> options = board.getOptions().stream()
-                .map(option -> new OptionResponse(option.getId(), option.getName(), option.getDescription(),
-                        option.getPros(), option.getCons(), option.getScore())).toList();
+        List<OptionResponse> options = board.getOptions().stream().map(this::optionResponse).toList();
         return new BoardResponse(board.getId(), board.getTitle(), board.getDescription(), board.getCategory(),
                 board.getVisibility(), board.getPollType(), board.getOwner().getId(),
                 board.getOwner().getDisplayName(), board.getCreatedAt(), options);

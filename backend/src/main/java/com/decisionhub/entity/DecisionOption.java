@@ -38,6 +38,14 @@ public class DecisionOption {
         this.score = score;
     }
 
+    public void update(String name, String description, String pros, String cons, Integer score) {
+        this.name = name;
+        this.description = description;
+        this.pros = pros;
+        this.cons = cons;
+        this.score = score;
+    }
+
     public void setBoard(DecisionBoard board) { this.board = board; }
     public Long getId() { return id; }
     public String getName() { return name; }

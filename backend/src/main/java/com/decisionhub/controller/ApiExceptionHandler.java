@@ -1,5 +1,6 @@
 package com.decisionhub.controller;
 
+import com.decisionhub.service.ConflictException;
 import com.decisionhub.service.ForbiddenException;
 import com.decisionhub.service.ResourceNotFoundException;
 import java.util.Map;
@@ -21,6 +22,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<Map<String, String>> forbidden(ForbiddenException exception) {
         return response(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, String>> businessConflict(ConflictException exception) {
+        return response(HttpStatus.CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler({IllegalArgumentException.class, MethodArgumentNotValidException.class})

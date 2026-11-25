@@ -13,6 +13,7 @@ public interface BoardVoteRepository extends JpaRepository<BoardVote, Long> {
     List<BoardVote> findAllByBoard_IdAndUser_Id(Long boardId, Long userId);
     void deleteAllByBoard_Id(Long boardId);
     long countByBoard_Id(Long boardId);
+    long countByOption_Id(Long optionId);
     long countByUser_Id(Long userId);
 
     @Query("select v.option.id, count(v.id) from BoardVote v where v.board.id = :boardId group by v.option.id")

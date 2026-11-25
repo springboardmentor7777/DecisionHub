@@ -113,6 +113,49 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
+   * Keep the saved profile in sync with the server. If an administrator changes this
+   * user's role, the dashboard updates on the next page load or when the tab regains focus,
+   * without needing to log in again.
+   */
+  useEffect(() => {
+    if (!token) return undefined;
+    let cancelled = false;
+
+    const refreshProfile = () => {
+      authApi
+        .getProfile()
+        .then((profile) => {
+          if (cancelled) return;
+          setUser((current) => {
+            if (!current) return current;
+            const merged = { ...current, ...profile };
+            return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
+          });
+        })
+        .catch(() => {
+          // A 401 is handled by the Axios interceptor (it logs the user out).
+          // Any other failure is ignored; the saved profile stays as it was.
+        });
+    };
+
+    refreshProfile();
+    window.addEventListener('focus', refreshProfile);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', refreshProfile);
+    };
+  }, [token]);
+
+  /**
+   * Save profile changes (such as a new role) back to the storage the session lives in.
+   */
+  useEffect(() => {
+    if (!token || !user) return;
+    const storage = localStorage.getItem(STORAGE_KEYS.TOKEN) ? localStorage : sessionStorage;
+    storage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+  }, [user, token]);
+
+  /**
    * Listen for unauthorized 401 events from Axios interceptor
    */
   useEffect(() => {

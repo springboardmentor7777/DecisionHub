@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/moderation/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/boards/mine").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/boards/public", "/api/boards/*",
-                                "/api/boards/*/votes",
+                                "/api/boards/*/votes", "/api/boards/*/options",
                                 "/api/boards/*/comments", "/api/communities").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/boards/*/votes").permitAll()
                         .anyRequest().authenticated())

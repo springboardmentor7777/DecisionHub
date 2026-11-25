@@ -26,6 +26,11 @@ public final class ApiDtos {
                                   String bio, String interests, Instant createdAt) {}
     public record UserRoleUpdateRequest(@NotNull Role role) {}
     public record UserRoleResponse(Long id, String email, Role role) {}
+    public record AdminUserResponse(Long id, String email, String displayName, Role role, Instant createdAt) {}
+    public record AuditLogResponse(Long id, String actorEmail, String action, String targetType,
+                                   Long targetId, String details, Instant createdAt) {}
+    public record ModerationCommentResponse(Long id, Long boardId, String boardTitle, Long parentId,
+                                            Long authorId, String authorName, String content, Instant createdAt) {}
 
     public record OptionRequest(@NotBlank @Size(max = 160) String name,
                                 @Size(max = 2000) String description,

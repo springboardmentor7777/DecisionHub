@@ -21,3 +21,6 @@ Thumbs.db
 # Salesforce CLI cache
 .sf/
 .sfdx/
+
+# Scratch reports
+check-report.txt

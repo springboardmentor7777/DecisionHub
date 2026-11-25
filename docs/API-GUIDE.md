@@ -123,12 +123,34 @@ Other useful board endpoints:
 
 | Method | Route | Authentication | Purpose |
 |---|---|---|---|
-| `GET` | `/api/boards/public` | No | List public boards |
-| `GET` | `/api/boards/mine` | Yes | List your boards |
+| `GET` | `/api/boards/public` | No | List public boards (supports filters, see below) |
+| `GET` | `/api/boards/mine` | Yes | List your boards (supports filters, see below) |
 | `GET` | `/api/boards/{id}` | No for public boards | Read a board; private boards are owner-only |
 | `PUT` | `/api/boards/{id}` | Yes, owner only | Update board details |
-| `POST` | `/api/boards/{id}/options` | Yes, owner only | Add an option |
 | `DELETE` | `/api/boards/{id}` | Yes, owner only | Delete a board (`204 No Content`) |
+| `GET` | `/api/boards/{id}/options` | No for public boards | List a board's options |
+| `POST` | `/api/boards/{id}/options` | Yes, owner only | Add an option (maximum 20) |
+| `PUT` | `/api/boards/{id}/options/{optionId}` | Yes, owner only | Replace an option's details; returns the board |
+| `DELETE` | `/api/boards/{id}/options/{optionId}` | Yes, owner only | Remove an option; returns the board |
+
+**Rules for options and poll types**
+- A board always keeps at least 2 options. Deleting one below that returns `409 Conflict`.
+- An option that already has votes cannot be deleted (`409 Conflict`).
+- `PUT` on an option replaces all of its fields, so send the values you want to keep.
+- The `pollType` of a board cannot be changed once it has received a vote (`409 Conflict`). You can still edit other board details.
+
+**Filtering boards**
+
+`GET /api/boards/public` and `GET /api/boards/mine` accept optional query parameters, which can be combined:
+
+| Parameter | Applies to | Meaning |
+|---|---|---|
+| `category` | both | Exact category, not case-sensitive (`?category=career`) |
+| `q` | both | Text search in the title, description, and option names |
+| `pollType` | both | `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, or `RATING` |
+| `visibility` | `/mine` only | `PUBLIC` or `PRIVATE` |
+
+An unknown `pollType` or `visibility` value returns `400 Bad Request`.
 
 ## 3. Vote on an option
 
@@ -188,7 +210,14 @@ To reply, set `parentId` to the ID of an existing comment on the same board. The
 ## Other API areas
 
 - **Profile:** `GET` and `PUT /api/users/me`; update the password with `PUT /api/users/me/password`.
-- **Administration:** `PATCH /api/admin/users/{id}/role` requires an administrator. Send `{"role":"USER"}`, `{"role":"MODERATOR"}`, or `{"role":"ADMIN"}` to change the account role.
+- **Administration** (administrators only):
+  - `GET /api/admin/users` lists accounts. Optional filters: `?role=USER|MODERATOR|ADMIN` and `?q=` (matches name or email).
+  - `PATCH /api/admin/users/{id}/role` with `{"role":"USER"}`, `{"role":"MODERATOR"}`, or `{"role":"ADMIN"}` changes an account's role. An administrator cannot change their own role (`409`), and the last administrator can never be demoted. The user is notified of the change.
+  - `GET /api/admin/audit-logs` returns the 100 most recent audited actions (role changes and content removals).
+- **Moderation** (moderators and administrators; only content on public boards is visible to moderators):
+  - `GET /api/moderation/comments` lists the 50 most recent comments on public boards.
+  - `DELETE /api/moderation/comments/{id}` removes a comment (and its replies). The author is notified.
+  - `DELETE /api/moderation/boards/{id}` removes a public board with its votes and comments. The owner is notified.
 - **Communities:** `GET /api/communities` is public. Create, join, leave, or delete communities using the routes in the [backend API overview](../backend/README.md).
 - **Notifications:** `GET /api/notifications` and `PATCH /api/notifications/{id}/read` require authentication.
 - **Dashboard:** `GET /api/analytics/dashboard` requires authentication.
@@ -209,7 +238,7 @@ Errors are JSON objects with an `error` message. For example:
 | `401 Unauthorized` | Missing/invalid authentication or incorrect login credentials |
 | `403 Forbidden` | Signed-in user is not allowed to perform this operation |
 | `404 Not Found` | Requested board, profile, or other resource does not exist |
-| `409 Conflict` | Request conflicts with existing data, such as a duplicate account |
+| `409 Conflict` | Request conflicts with existing data or a rule, such as a duplicate account or an administrator changing their own role |
 
 Validation errors return an `error` message naming the first invalid field. Make sure required fields are present and that enum values use the exact uppercase spelling shown in the examples.
 
