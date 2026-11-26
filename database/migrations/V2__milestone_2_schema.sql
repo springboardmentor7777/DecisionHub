@@ -1,10 +1,4 @@
-﻿-- ============================================
--- DecisionHub - Team 4
--- PostgreSQL Database Schema (Neon)
--- Milestone 2 Migrations
--- ============================================
-
--- 1. Add Poll Type to Decisions
+﻿-- 1. Add Poll Type to Decisions
 ALTER TABLE decisions 
 ADD COLUMN IF NOT EXISTS poll_type VARCHAR(30) DEFAULT 'SINGLE_CHOICE' 
 CHECK (poll_type IN ('SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'RATING_BASED'));
