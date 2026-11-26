@@ -1,17 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
-
-const CATEGORIES = ["Career", "Education", "Technology", "Travel", "Finance", "Lifestyle"];
-const STORE_KEY = "decisionhub-boards";
-
-const readBoards = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORE_KEY)) || [];
-  } catch {
-    return [];
-  }
-};
+import { boardsApi, CATEGORIES, pollLabel } from "../api/boards";
+import { votesApi } from "../api/votes";
+import profileApi from "../api/profile";
+import Alert from "../components/common/Alert";
+import Spinner from "../components/common/Spinner";
+import Button from "../components/common/Button";
+import Input from "../components/common/Input";
 
 const panel = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm";
 const field = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100";
@@ -44,9 +40,8 @@ function DashboardShell({ role, children, activePage, setActivePage }) {
 
   function selectPage(item) {
     setActivePage(item);
-    if (item === "Create Decision") {
-      window.dispatchEvent(new Event("decisionhub:create"));
-    }
+    if (role === "user" && ["Create Decision", "My Decisions"].includes(item)) navigate("/boards");
+    if (role === "user" && item === "Community") navigate("/communities");
   }
 
   return (
@@ -173,114 +168,197 @@ function Empty({ children }) {
   return <p className="py-10 text-center text-sm text-slate-500">{children}</p>;
 }
 
-function Modal({ title, onClose, children }) {
+function ProfileView() {
+  const [profile, setProfile] = useState({ email: "", displayName: "", bio: "", interests: "" });
+  const [password, setPassword] = useState({ currentPassword: "", newPassword: "" });
+  const [loading, setLoading] = useState(true);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [profileError, setProfileError] = useState("");
+  const [profileSuccess, setProfileSuccess] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    profileApi.get().then((data) => {
+      if (active) {
+        setProfile({
+          email: data.email || "",
+          displayName: data.displayName || "",
+          bio: data.bio || "",
+          interests: data.interests || "",
+        });
+      }
+    }).catch((error) => {
+      if (active) setLoadError(error.message);
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const saveProfile = async (event) => {
+    event.preventDefault();
+    setProfileError("");
+    setProfileSuccess("");
+    setSavingProfile(true);
+    try {
+      const updated = await profileApi.update({
+        displayName: profile.displayName.trim(),
+        bio: profile.bio,
+        interests: profile.interests,
+      });
+      setProfile({
+        email: updated.email || profile.email,
+        displayName: updated.displayName || "",
+        bio: updated.bio || "",
+        interests: updated.interests || "",
+      });
+      setProfileSuccess("Profile updated.");
+    } catch (error) {
+      setProfileError(error.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    setChangingPassword(true);
+    try {
+      await profileApi.changePassword(password);
+      setPassword({ currentPassword: "", newPassword: "" });
+      setPasswordSuccess("Password changed.");
+    } catch (error) {
+      setPasswordError(error.message);
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  if (loading) {
+    return <section className={panel}><div className="flex justify-center py-10"><Spinner size="lg" className="text-indigo-600" /></div></section>;
+  }
+
+  if (loadError) {
+    return <section className={panel}><Heading title="My Profile" subtitle="Manage your account profile." /><Alert type="error" className="mt-4">{loadError}</Alert></section>;
+  }
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
-      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
-    >
-      <section className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <button type="button" onClick={onClose} className="text-2xl text-slate-400 hover:text-slate-700" aria-label="Close">×</button>
-        </div>
-        {children}
+    <div className="space-y-6">
+      <section className={panel}>
+        <Heading title="My Profile" subtitle="Manage your account profile." />
+        <form className="mt-6 space-y-4" onSubmit={saveProfile}>
+          {profileError && <Alert type="error">{profileError}</Alert>}
+          {profileSuccess && <Alert type="success">{profileSuccess}</Alert>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input id="profile-email" label="Email" type="email" value={profile.email} disabled />
+            <Input id="profile-display-name" label="Display name" value={profile.displayName}
+              onChange={(event) => setProfile({ ...profile, displayName: event.target.value })}
+              maxLength={80} required />
+          </div>
+          <div>
+            <label htmlFor="profile-bio" className="mb-1.5 block text-sm font-semibold text-slate-700">Bio</label>
+            <textarea id="profile-bio" value={profile.bio} maxLength={1000}
+              onChange={(event) => setProfile({ ...profile, bio: event.target.value })}
+              rows={4} className={`${field} resize-y`} />
+          </div>
+          <div>
+            <label htmlFor="profile-interests" className="mb-1.5 block text-sm font-semibold text-slate-700">Interests</label>
+            <textarea id="profile-interests" value={profile.interests} maxLength={500}
+              onChange={(event) => setProfile({ ...profile, interests: event.target.value })}
+              rows={3} className={`${field} resize-y`} />
+          </div>
+          <Button type="submit" loading={savingProfile}>Save profile</Button>
+        </form>
+      </section>
+
+      <section className={panel}>
+        <h2 className="text-xl font-bold text-slate-900">Change password</h2>
+        <form className="mt-5 max-w-xl space-y-4" onSubmit={changePassword}>
+          {passwordError && <Alert type="error">{passwordError}</Alert>}
+          {passwordSuccess && <Alert type="success">{passwordSuccess}</Alert>}
+          <Input id="current-password" label="Current password" type="password"
+            autoComplete="current-password" value={password.currentPassword}
+            onChange={(event) => setPassword({ ...password, currentPassword: event.target.value })} required />
+          <Input id="new-password" label="New password" type="password"
+            autoComplete="new-password" value={password.newPassword}
+            onChange={(event) => setPassword({ ...password, newPassword: event.target.value })}
+            minLength={8} maxLength={72} required />
+          <Button type="submit" loading={changingPassword}>Change password</Button>
+        </form>
       </section>
     </div>
   );
 }
 
 export function UserDashboard() {
-  const [boards, setBoards] = useState(readBoards);
+  const [boards, setBoards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
-  const [status, setStatus] = useState("All");
-  const [showForm, setShowForm] = useState(false);
-  const [selected, setSelected] = useState(null);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [newCategory, setNewCategory] = useState("Career");
-  const [options, setOptions] = useState(["", ""]);
-  const [pro, setPro] = useState("");
-  const [con, setCon] = useState("");
-  const [comment, setComment] = useState("");
   const [activePage, setActivePage] = useState("Overview");
-
-  useEffect(() => { localStorage.setItem(STORE_KEY, JSON.stringify(boards)); }, [boards]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const openForm = () => setShowForm(true);
-    window.addEventListener("decisionhub:create", openForm);
-    return () => window.removeEventListener("decisionhub:create", openForm);
+    let active = true;
+    const loadBoards = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const myBoards = await boardsApi.listMine();
+        const results = await Promise.all(myBoards.map((board) => votesApi.results(board.id)));
+        if (active) {
+          setBoards(myBoards.map((board, index) => ({
+            ...board,
+            totalVotes: results[index].totalVotes,
+          })));
+        }
+      } catch (loadError) {
+        if (active) setError(loadError.message);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadBoards();
+    return () => { active = false; };
   }, []);
 
   const visibleBoards = useMemo(() => boards.filter((board) =>
-    board.title.toLowerCase().includes(search.toLowerCase()) &&
-    (category === "All" || board.category === category) &&
-    (status === "All" || board.status === status)
-  ), [boards, search, category, status]);
+    (board.title || "").toLowerCase().includes(search.toLowerCase()) &&
+    (category === "All" || board.category === category)
+  ), [boards, search, category]);
 
-  const totalVotes = boards.reduce((sum, board) => sum + board.options.reduce((n, option) => n + option.votes, 0), 0);
-  const totalComments = boards.reduce((sum, board) => sum + board.comments.length, 0);
-  const selectedBoard = boards.find((board) => board.id === selected);
-
-  function createBoard(event) {
-    event.preventDefault();
-    const names = options.map((value) => value.trim()).filter(Boolean);
-    if (!title.trim() || names.length < 2 || names.length > 5) {
-      window.alert("Enter a title and between 2 and 5 options.");
-      return;
-    }
-    setBoards((current) => [{
-      id: Date.now(), title: title.trim(), description: description.trim(),
-      category: newCategory, status: "Active",
-      options: names.map((name) => ({ name, votes: 0 })),
-      pros: pro.trim() ? [pro.trim()] : [],
-      cons: con.trim() ? [con.trim()] : [],
-      comments: []
-    }, ...current]);
-    setTitle(""); setDescription(""); setOptions(["", ""]); setPro(""); setCon("");
-    setShowForm(false); setActivePage("Overview");
-  }
-
-  function addComment(event) {
-    event.preventDefault();
-    if (!comment.trim() || !selectedBoard) return;
-    setBoards((current) => current.map((board) => board.id === selectedBoard.id
-      ? { ...board, comments: [...board.comments, { id: Date.now(), text: comment.trim() }] }
-      : board
-    ));
-    setComment("");
-  }
-
-  const toggleStatus = (id) => setBoards((current) => current.map((board) =>
-    board.id === id ? { ...board, status: board.status === "Active" ? "Completed" : "Active" } : board
-  ));
+  const totalVotes = boards.reduce((sum, board) => sum + board.totalVotes, 0);
+  const publicBoards = boards.filter((board) => board.visibility === "PUBLIC").length;
 
   return (
     <DashboardShell role="user" activePage={activePage} setActivePage={setActivePage}>
       {activePage === "Profile" ? (
-        <section className={panel}><Heading title="My Profile" subtitle="Your account profile." /><p className="mt-4 text-sm text-slate-500">Your profile details are managed by your connected account.</p></section>
+        <ProfileView />
       ) : activePage === "Settings" ? (
         <section className={panel}><Heading title="Settings" subtitle="Account preferences." /><p className="mt-4 text-sm text-slate-500">Settings can be connected to your backend.</p></section>
-      ) : activePage === "Community" ? (
-        <section className={panel}><Heading title="Community" subtitle="Browse and participate in community decisions." /></section>
       ) : (
         <>
           <Heading
             title="User Dashboard"
             subtitle="Create decisions, compare options and participate in community voting."
-            action={<button onClick={() => setShowForm(true)} className={primaryButton}>+ Create decision</button>}
+            action={<button onClick={() => navigate("/boards")} className={primaryButton}>+ Create decision</button>}
           />
           <StatCards items={[
             ["Decision boards", boards.length],
-            ["Active decisions", boards.filter((board) => board.status === "Active").length],
+            ["Active decisions", boards.length],
             ["Total votes", totalVotes],
-            ["Comments", totalComments]
+            ["Public boards", publicBoards]
           ]} />
           <section className={panel}>
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div><h2 className="text-xl font-bold">Decision boards</h2><p className="text-sm text-slate-500">Search, filter and participate in decisions.</p></div>
+              <div><h2 className="text-xl font-bold">Decision boards</h2><p className="text-sm text-slate-500">Your decisions, votes and comparisons.</p></div>
               <input className={`${field} max-w-xs`} placeholder="Search boards..." value={search} onChange={(event) => setSearch(event.target.value)} />
             </div>
             <div className="mb-5 flex flex-wrap gap-3">
@@ -288,83 +366,32 @@ export function UserDashboard() {
                 <option value="All">All categories</option>
                 {CATEGORIES.map((item) => <option key={item}>{item}</option>)}
               </select>
-              <select className={`${field} max-w-48`} value={status} onChange={(event) => setStatus(event.target.value)}>
-                <option value="All">All statuses</option><option>Active</option><option>Completed</option>
-              </select>
             </div>
-            <div className="space-y-4">
+            {loading ? (
+              <div className="flex justify-center py-10"><Spinner size="lg" className="text-indigo-600" /></div>
+            ) : error ? (
+              <Alert type="error">{error}</Alert>
+            ) : <div className="space-y-4">
               {visibleBoards.map((board) => {
-                const votes = board.options.reduce((sum, option) => sum + option.votes, 0);
                 return (
                   <article key={board.id} className="rounded-xl border border-slate-200 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h3 className="font-bold">{board.title}</h3>
-                        <p className="mt-1 text-sm text-slate-500">{board.description}</p>
-                        <p className="mt-2 text-xs text-indigo-600">{board.category} · {board.status} · {votes} votes</p>
+                        <p className="mt-1 text-sm text-slate-500">{board.description || "No description provided."}</p>
+                        <p className="mt-2 text-xs text-indigo-600">
+                          {board.category} · {board.visibility === "PRIVATE" ? "Private" : "Public"} · {pollLabel(board.pollType)} · {board.totalVotes} {board.totalVotes === 1 ? "vote" : "votes"}
+                        </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button className={secondaryButton} onClick={() => setSelected(board.id)}>Details</button>
-                        <button className={secondaryButton} onClick={() => toggleStatus(board.id)}>{board.status === "Active" ? "Close" : "Reopen"}</button>
-                        <button className="rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={() => window.confirm("Delete this board?") && setBoards((current) => current.filter((item) => item.id !== board.id))}>Delete</button>
-                      </div>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      {board.options.map((option) => {
-                        const percent = votes ? Math.round(option.votes / votes * 100) : 0;
-                        return (
-                          <div key={option.name}>
-                            <div className="flex justify-between text-sm"><span>{option.name}</span><span>{option.votes} votes ({percent}%)</span></div>
-                            <div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-indigo-500" style={{ width: `${percent}%` }} /></div>
-                            {board.status === "Active" && <button className="mt-2 rounded-md bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100" onClick={() => setBoards((current) => current.map((item) => item.id !== board.id ? item : { ...item, options: item.options.map((choice) => choice.name === option.name ? { ...choice, votes: choice.votes + 1 } : choice) }))}>Vote for {option.name}</button>}
-                          </div>
-                        );
-                      })}
+                      <Link className={secondaryButton} to={`/boards/${board.id}`}>Details</Link>
                     </div>
                   </article>
                 );
               })}
               {!visibleBoards.length && <Empty>No decision boards found. Create a board to get started.</Empty>}
-            </div>
+            </div>}
           </section>
         </>
-      )}
-
-      {showForm && (
-        <Modal title="Create decision board" onClose={() => setShowForm(false)}>
-          <form onSubmit={createBoard} className="space-y-4">
-            <label className="block text-sm font-medium">Decision title<input required className={`${field} mt-1`} value={title} onChange={(event) => setTitle(event.target.value)} /></label>
-            <label className="block text-sm font-medium">Description<textarea className={`${field} mt-1`} rows="2" value={description} onChange={(event) => setDescription(event.target.value)} /></label>
-            <label className="block text-sm font-medium">Category<select className={`${field} mt-1`} value={newCategory} onChange={(event) => setNewCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select></label>
-            <div>
-              <p className="mb-2 text-sm font-medium">Voting options (2–5)</p>
-              {options.map((value, index) => (
-                <div key={index} className="mb-2 flex gap-2">
-                  <input className={field} placeholder={`Option ${index + 1}`} value={value} onChange={(event) => setOptions((current) => current.map((item, i) => i === index ? event.target.value : item))} />
-                  {options.length > 2 && <button type="button" className={secondaryButton} onClick={() => setOptions((current) => current.filter((_, i) => i !== index))}>Remove</button>}
-                </div>
-              ))}
-              {options.length < 5 && <button type="button" className="text-sm font-semibold text-indigo-600" onClick={() => setOptions((current) => [...current, ""])}>+ Add option</button>}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">Key pro<input className={`${field} mt-1`} value={pro} onChange={(event) => setPro(event.target.value)} /></label>
-              <label className="text-sm">Key con<input className={`${field} mt-1`} value={con} onChange={(event) => setCon(event.target.value)} /></label>
-            </div>
-            <div className="flex justify-end gap-2"><button type="button" className={secondaryButton} onClick={() => setShowForm(false)}>Cancel</button><button className={primaryButton}>Publish board</button></div>
-          </form>
-        </Modal>
-      )}
-
-      {selectedBoard && (
-        <Modal title={selectedBoard.title} onClose={() => setSelected(null)}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl bg-emerald-50 p-4"><h3 className="font-semibold text-emerald-800">Pros</h3>{(selectedBoard.pros || []).map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}{!selectedBoard.pros?.length && <p className="mt-2 text-sm text-slate-500">No pros added.</p>}</div>
-            <div className="rounded-xl bg-rose-50 p-4"><h3 className="font-semibold text-rose-800">Cons</h3>{(selectedBoard.cons || []).map((item, index) => <p key={index} className="mt-2 text-sm">{item}</p>)}{!selectedBoard.cons?.length && <p className="mt-2 text-sm text-slate-500">No cons added.</p>}</div>
-          </div>
-          <h3 className="mt-6 font-bold">Community comments</h3>
-          <div className="my-3 space-y-2">{selectedBoard.comments.map((item) => <p key={item.id} className="rounded-lg bg-slate-50 p-3 text-sm">{item.text}</p>)}{!selectedBoard.comments.length && <Empty>No comments yet.</Empty>}</div>
-          <form onSubmit={addComment} className="flex gap-2"><input className={field} placeholder="Write a comment..." value={comment} onChange={(event) => setComment(event.target.value)} /><button className={primaryButton}>Post</button></form>
-        </Modal>
       )}
     </DashboardShell>
   );
