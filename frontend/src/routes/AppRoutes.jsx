@@ -10,6 +10,11 @@ import ResetPasswordPage from '../pages/ResetPasswordPage';
 import DashboardPage from '../pages/DashboardPage';
 import OAuth2RedirectPage from '../pages/OAuth2RedirectPage';
 import RequireAuth from './RequireAuth';
+import AppShell from '../layout/AppShell';
+import BoardsPage from '../pages/BoardsPage';
+import BoardDetailPage from '../pages/BoardDetailPage';
+import BoardEditPage from '../pages/BoardEditPage';
+import CommunitiesPage from '../pages/CommunitiesPage';
 
 // Public route wrapper
 const PublicOnlyRoute = ({ children }) => {
@@ -124,6 +129,42 @@ export const AppRoutes = () => {
         element={
           <RequireAuth allowedRoles={['communityModerator', 'administrator']}>
             <DashboardPage role="moderator" />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/boards"
+        element={
+          <RequireAuth>
+            <AppShell><BoardsPage /></AppShell>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/boards/:id"
+        element={
+          <RequireAuth>
+            <AppShell><BoardDetailPage /></AppShell>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/boards/:id/edit"
+        element={
+          <RequireAuth>
+            <AppShell><BoardEditPage /></AppShell>
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/communities"
+        element={
+          <RequireAuth>
+            <AppShell><CommunitiesPage /></AppShell>
           </RequireAuth>
         }
       />
