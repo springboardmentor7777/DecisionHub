@@ -1,99 +1,70 @@
-
 # DecisionHub - Database Documentation
 
 ## 1. Overview
 
 DecisionHub is a collaborative decision-making and community polling platform.
 
-The database is designed using PostgreSQL to manage users, communities, decisions, voting, comments, notifications, and reports.
+The database is designed using PostgreSQL (hosted on Neon) to manage roles, users, communities, decisions, options, voting, comments, notifications, and reports.
 
 ## 2. Database Details
 
-- Database Name: decisionhub_db
-- Database Management System: PostgreSQL
-- Schema: public
-- Total Tables: 8
+- **Database Management System:** PostgreSQL
+- **Schema:** `public`
+- **Migration Tool:** Flyway (`backend/src/main/resources/db/migration/`)
+- **Total Tables:** 9
 
 ## 3. Database Tables
 
 | S.No | Table Name | Description |
 |------|------------|-------------|
-| 1 | users | Stores user account and role information |
-| 2 | communities | Stores community details |
-| 3 | decisions | Stores decisions created by users |
-| 4 | options | Stores available options for each decision |
-| 5 | votes | Stores users' voting records |
-| 6 | comments | Stores comments and replies |
-| 7 | notifications | Stores user notifications |
-| 8 | reports | Stores reports submitted by users |
+| 1 | `roles` | Stores system and user role definitions (e.g., ADMIN, MEMBER) |
+| 2 | `users` | Stores user account details linked to roles |
+| 3 | `communities` | Stores community details and metadata |
+| 4 | `decisions` | Stores polls/decisions (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `RATING`) |
+| 5 | `options` | Stores available choices or rating options for each decision |
+| 6 | `votes` | Stores users' voting records and ratings |
+| 7 | `comments` | Stores comments and nested replies on decisions |
+| 8 | `notifications` | Stores user notifications |
+| 9 | `reports` | Stores moderation reports submitted by users |
 
 ## 4. Relationships
 
+- A role can be assigned to multiple users.
 - A user can create multiple communities.
 - A community can contain multiple decisions.
 - A user can create multiple decisions.
 - A decision can have multiple options.
-- Users can vote on decision options.
-- A decision can have multiple comments.
-- Comments can have replies.
+- Users can submit votes/ratings on decision options.
+- A decision can have multiple comments, and comments can have replies.
 - A user can receive multiple notifications.
 - Users can submit multiple reports.
 
 ## 5. Constraints
 
-The database uses:
+- **Primary Keys:** Unique identification (`BIGSERIAL` / `BIGINT`) for all records.
+- **Foreign Keys:** Enforce referential integrity across all 9 tables (`ON DELETE CASCADE` / `ON DELETE SET NULL`).
+- **UNIQUE Constraints:** Prevent duplicate emails/role names and enforce voting uniqueness rules per decision/option.
+- **CHECK Constraints:** Validate poll types (`SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `RATING`), decision status, visibility, and report status.
 
-- Primary Keys for unique record identification.
-- Foreign Keys to maintain relationships between tables.
-- UNIQUE constraints to prevent duplicate email addresses and ensure
-  each user can vote only once per decision.
-- CHECK constraints to validate roles, decision status, visibility, and report status.
-- ON DELETE CASCADE and ON DELETE SET NULL to manage related records.
+## 6. Schema & Backend Source Files
 
-## 6. Indexes
+| Location / File | Purpose |
+|-----------------|---------|
+| `backend/src/main/resources/db/migration/` | Flyway SQL migration scripts defining the 9-table schema and constraints |
+| `backend/src/main/java/com/decisionhub/entity/` | Spring Data JPA entity classes mapped to the 9 database tables |
+| `backend/src/main/java/com/decisionhub/dto/` | Request/Response DTOs (`PollRequest`, `PollResponse`, etc.) |
+| `DATABASE.md` | Project database structure documentation |
 
-The following indexes are created for frequently accessed columns:
+## 7. Poll & Voting Rules
 
-- idx_decisions_community
-- idx_options_decision
-- idx_votes_user
-- idx_comments_decision
-- idx_notifications_user
+- **Supported Poll Types:** `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, and `RATING`.
+- **Single-Choice Polls:** Each user can select only one option per decision.
+- **Multiple-Choice Polls:** Users can select multiple options within the same decision without duplicate votes on the same option.
+- **Rating Polls:** Users submit numeric ratings for options/decisions.
+- **Moderation:** The `reports` table uses `target_type` and `target_id` to identify reported decisions or comments.
 
-## 7. Database Files
+## 8. Status
 
-| File | Purpose |
-|------|---------|
-| schema.sql | Creates database tables, constraints, and indexes |
-| sample_data.sql | Inserts 42 sample records |
-| verification.sql | Contains database verification and JOIN queries |
-| DATABASE.md | Documents the database structure |
-
-## 8. Sample Data Summary
-
-| Table | Records |
-|-------|---------|
-| Users | 3 |
-| Communities | 3 |
-| Decisions | 3 |
-| Options | 9 |
-| Votes | 9 |
-| Comments | 5 |
-| Notifications | 5 |
-| Reports | 5 |
-| **Total** | **42** |
-
-## 9. Notes
-- The voting system follows a single-choice voting rule.
-- Each user can submit only one vote per decision.
-- The UNIQUE constraint (decision_id, user_id) enforces this rule.
-- The composite foreign key ensures that the selected option belongs
-  to the corresponding decision.
-- The reports table uses target_type and target_id to identify
-  reported content.
-- Sample password_hash values are placeholders for testing only
-  and must not be used for authentication.
-  
-## 10. Status
-
-Database schema creation, sample data insertion, constraint verification, and JOIN testing have been completed.
+- 9-table PostgreSQL schema deployed and verified on Neon via Flyway migrations.
+- JPA entities, repositories, and poll DTOs (`PollRequest`, `PollResponse`) synced on `team-one`.
+- REST API endpoints verified via Postman.
