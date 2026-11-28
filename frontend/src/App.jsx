@@ -20,15 +20,36 @@ import CommunityDetails from "./pages/dashboard/communities/CommunityDetails.jsx
 import EditBoard from "./pages/dashboard/EditBoard.jsx";
 
 function RequireAuth({ children }) {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <p className="text-plum font-medium">
+                    Checking authentication...
+                </p>
+            </div>
+        );
+    }
+
     return user ? children : <Navigate to="/login" replace />;
 }
 
 function DashboardIndex() {
-    const { user } = useAuth();
+    const { user, loading } = useAuth();
+
+    if (loading) return null;
+
     if (!user) return <Navigate to="/login" replace />;
-    if (user.role === "admin") return <Navigate to="/dashboard/admin" replace />;
-    if (user.role === "moderator") return <Navigate to="/dashboard/moderator" replace />;
+
+    if (user.role === "admin") {
+        return <Navigate to="/dashboard/admin" replace />;
+    }
+
+    if (user.role === "moderator") {
+        return <Navigate to="/dashboard/moderator" replace />;
+    }
+
     return <UserDashboard />;
 }
 
